@@ -25,4 +25,8 @@ const isXYInsideBox = (x, y, X1, Y1, X2, Y2) => {
             return (x > X1 && x <= X2 && y >= Y1 && y <= Y2)
         }
 
-export {sleep, createPoint, setCanvasFont, getFontHeight, getCharacterWidth, isXYInsideBox }
+const paintBackground = (ctx, color, width, height) => {
+    ctx.fillStyle = color
+    ctx.fillRect(0,0,ctx.canvas.width, ctx.canvas.height)
+}
+export {sleep, createPoint, setCanvasFont, getFontHeight, getCharacterWidth, isXYInsideBox, paintBackground}
