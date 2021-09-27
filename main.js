@@ -11,33 +11,58 @@ function main() {
             const properties = {
                 coords: undefined,
                 color: color,
-                radius: 0,
+                radius: 20,
+                speed: 1,
+                lineWidth: 3,
             }
 
-            let speed = 1
             let clicked = false
+            let animationRadius = properties.radius
+            let imageDataBehind
+
+            const getObjectImageData = () => {
+                return ctx.getImageData(properties.coords[0] - properties.radius - properties.lineWidth,
+                    properties.coords[1] - properties.radius - properties.lineWidth,
+                    2 * (properties.radius + properties.lineWidth),
+                    2 * (properties.radius + properties.lineWidth));
+            }
+
             return {
                 draw: () => {
                     if (clicked) {
                         let path = new Path2D
-                        let radius = properties.radius
-                        if (radius > 0) {
+                        if (imageDataBehind) {
+                            ctx.putImageData(imageDataBehind, 
+                                properties.coords[0] - properties.lineWidth - properties.radius,
+                                 properties.coords[1] - properties.radius - properties.lineWidth)
+                        }
+                        imageDataBehind = getObjectImageData()
+                        if (animationRadius > 0) {
                             ctx.beginPath(path)
-                            path.arc(properties.coords[0], properties.coords[1], radius, 0, 2 * Math.PI)
+                            path.arc(properties.coords[0], properties.coords[1], animationRadius, 0, 2 * Math.PI)
                             path.lineWidth = 3
                             ctx.closePath(path)
                             ctx.strokeStyle = color
                             ctx.stroke(path)
-                            properties.radius -= speed
+                            animationRadius -= properties.speed
+                            if (animationRadius <= 0) {
+                                clicked = false
+                                ctx.putImageData(imageDataBehind, properties.coords[0] - properties.radius, properties.coords[1] - properties.radius)
+                                imageDataBehind = undefined
+                            }
                         }
-                        else if (radius <= 0) {
-                            clicked = false
-                        }
+                        // else if (animationRadius <= 0) {
+                        //     clicked = false
+                        //     animationRadius = properties.radius
+                        // }
                     }
                 },
 
-                clickedNow: () => {
+                clickedAt: (coords) => {
+                    properties.coords = coords
                     clicked = true
+                    animationRadius = properties.radius
+
                 },
 
                 getProperties: () => {
@@ -50,19 +75,28 @@ function main() {
             const properties = {
                 coords: initialCoords,
                 width: 40,
-                height: 170,
+                height: 60,
                 coordsToReach: initialCoords,
                 speed: 1.5
             }
 
             let slope, x0, y0, cosTheta, horizontalIncrement;
-            let coordsToReachChangedFlag = true
-            let path = new Path2D
+            let reached = false
+            let done = false
+            let imageDataBehind
+
+            const getObjectImageData = () => {
+                return ctx.getImageData(properties.coords[0], properties.coords[1], properties.width + 1, properties.height + 1);
+            }
 
             return {
                 draw() {
+                    if (imageDataBehind && reached === false) {
+                        ctx.putImageData(imageDataBehind, properties.coords[0], properties.coords[1])
+                    }
+
                     if (properties.coordsToReach !== properties.coords) {
-                        if (coordsToReachChangedFlag) {
+                        if (reached === false) {
                             let deltaX = properties.coordsToReach[0] - properties.coords[0]
                             let deltaY = properties.coordsToReach[1] - properties.coords[1]
                             x0 = properties.coords[0]
@@ -73,8 +107,8 @@ function main() {
                             horizontalIncrement = properties.speed * cosTheta
                         }
                         /* we can simply add a shift in the coords along the slope but the destination point will get missed and the object 
-                        will not stop  at that point...to avoid this in the case when horizontal shift will go ahead of the destination 
-                        point i move the object to the destination immediately and stop. */
+                        will not stop  at that point...to avoid this, in the case when the horizontal shift will go ahead of the destination 
+                        point i move the object to the destination directly and stop. */
                         if (properties.coordsToReach[0] - (properties.coords[0] + horizontalIncrement) > 0) {
                             if (cosTheta >= 0) {
                                 //moving towards right
@@ -84,13 +118,13 @@ function main() {
                             else if (cosTheta <= 0) {
                                 //moving towards left
                                 properties.coords = properties.coordsToReach
-                                coordsToReachChangedFlag = false
+                                done = true
                             }
                         }
                         else if (properties.coordsToReach[0] - (properties.coords[0] + horizontalIncrement) <= 0) {
                             if (cosTheta >= 0) {
                                 properties.coords = properties.coordsToReach
-                                coordsToReachChangedFlag = false
+                                done = true
                             }
                             else if (cosTheta < 0) {
                                 properties.coords[0] = properties.coords[0] + horizontalIncrement
@@ -98,13 +132,24 @@ function main() {
                             }
                         }
                     }
-                    ctx.fillStyle = 'white'
-                    ctx.fillRect(properties.coords[0], properties.coords[1], properties.width, properties.height)
+
+                    if (reached === false) {
+                        //reached === false ensures that it does not get self's image data when putImageData() is not called.
+                        //gets the image data behind at shifted coords
+                        imageDataBehind = getObjectImageData()
+
+                        ctx.fillStyle = 'blue'
+                        ctx.fillRect(properties.coords[0], properties.coords[1], properties.width, properties.height)
+                        if (done) {
+                            reached = true
+                            done = false
+                        }
+                    }
                 },
 
                 moveTo(coords) {
                     properties.coordsToReach = coords
-                    coordsToReachChangedFlag = true
+                    reached = false
                 },
 
                 getProperties() {
@@ -118,29 +163,32 @@ function main() {
         let currentMouseCoords
 
         const theHero = playerObject(ctx, heroInitialCoords)
+        const theHero2 = playerObject(ctx, createPoint(200,200))
         const theHeroProps = theHero.getProperties()
         const theCursor = moveHereCursor(ctx, 'lightgreen')
         const theCursorProps = theCursor.getProperties()
 
         function paintScene() {
-            paintBackground(ctx, '#3a2081')
-            theCursor.draw()
+            // paintBackground(ctx, '#3a2081')
+            theHero.draw()
+            theHero2.draw()
+            // theCursor.draw()
             // if (theHeroProps.coords !== theHeroProps.coordsToReach) {
-                theHero.draw()
             // }
-            if (isDebugging && currentMouseCoords) {
-                setCanvasFont(ctx, { fontStyle: 'Fira Mono', fontColor: 'grey', fontSize: '15' })
-                ctx.fillText(`x:${currentMouseCoords[0]}, y:${currentMouseCoords[1]}`, currentMouseCoords[0], currentMouseCoords[1])
-            }
+            // if (isDebugging && currentMouseCoords) {
+            //     setCanvasFont(ctx, { fontStyle: 'Fira Mono', fontColor: 'grey', fontSize: '15' })
+            //     ctx.fillText(`x:${currentMouseCoords[0]}, y:${currentMouseCoords[1]}`, currentMouseCoords[0], currentMouseCoords[1])
+            // }
         }
 
+        paintBackground(ctx, '#3a2081')
         paintScene()
 
         canvas.addEventListener('click', (event) => {
             let mouseCoords = createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
             theHero.moveTo(mouseCoords)
-            theCursorProps.coords = mouseCoords
-            theCursorProps.radius = 20
+            theHero2.moveTo(mouseCoords)
+            theCursor.clickedAt(mouseCoords)
         })
 
         canvas.addEventListener('mousemove', (event) => {
@@ -163,4 +211,4 @@ function main() {
     }
 }
 
-    window.addEventListener('load', main)
+window.addEventListener('load', main)
