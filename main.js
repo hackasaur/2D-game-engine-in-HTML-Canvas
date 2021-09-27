@@ -32,9 +32,9 @@ function main() {
                     if (clicked) {
                         let path = new Path2D
                         if (imageDataBehind) {
-                            ctx.putImageData(imageDataBehind, 
+                            ctx.putImageData(imageDataBehind,
                                 properties.coords[0] - properties.lineWidth - properties.radius,
-                                 properties.coords[1] - properties.radius - properties.lineWidth)
+                                properties.coords[1] - properties.radius - properties.lineWidth)
                         }
                         imageDataBehind = getObjectImageData()
                         if (animationRadius > 0) {
@@ -77,26 +77,31 @@ function main() {
                 width: 40,
                 height: 60,
                 coordsToReach: initialCoords,
-                speed: 1.5
+                speed: 1.5,
+                inMotion: false
             }
 
             let slope, x0, y0, cosTheta, horizontalIncrement;
-            let reached = false
-            let done = false
+            // let reached = false
+            let calculated = false
             let imageDataBehind
+            let previousCoords
 
             const getObjectImageData = () => {
                 return ctx.getImageData(properties.coords[0], properties.coords[1], properties.width + 1, properties.height + 1);
             }
 
+            imageDataBehind = getObjectImageData()
+            //initial draw
+            ctx.fillStyle = 'blue'
+            ctx.fillRect(properties.coords[0], properties.coords[1], properties.width, properties.height)
+
             return {
                 draw() {
-                    if (imageDataBehind && reached === false) {
-                        ctx.putImageData(imageDataBehind, properties.coords[0], properties.coords[1])
-                    }
-
                     if (properties.coordsToReach !== properties.coords) {
-                        if (reached === false) {
+                        ctx.putImageData(imageDataBehind, properties.coords[0], properties.coords[1])
+
+                        if (calculated === false) {
                             let deltaX = properties.coordsToReach[0] - properties.coords[0]
                             let deltaY = properties.coordsToReach[1] - properties.coords[1]
                             x0 = properties.coords[0]
@@ -105,51 +110,54 @@ function main() {
                             let distanceFromCoordsTillCoordsToReach = Math.sqrt(deltaX ** 2 + deltaY ** 2)
                             cosTheta = deltaX / distanceFromCoordsTillCoordsToReach
                             horizontalIncrement = properties.speed * cosTheta
+                            calculated = true
                         }
+
+                        //logic for moving in a line towards the target coords
                         /* we can simply add a shift in the coords along the slope but the destination point will get missed and the object 
                         will not stop  at that point...to avoid this, in the case when the horizontal shift will go ahead of the destination 
                         point i move the object to the destination directly and stop. */
                         if (properties.coordsToReach[0] - (properties.coords[0] + horizontalIncrement) > 0) {
                             if (cosTheta >= 0) {
                                 //moving towards right
-                                properties.coords[0] = properties.coords[0] + horizontalIncrement
-                                properties.coords[1] = slope * (properties.coords[0] - x0) + y0
+                                properties.coords = createPoint(
+                                    properties.coords[0] + horizontalIncrement,
+                                    slope * (properties.coords[0] - x0) + y0
+                                )
+                                properties.inMotion = false
                             }
-                            else if (cosTheta <= 0) {
+                            else if (cosTheta < 0) {
                                 //moving towards left
                                 properties.coords = properties.coordsToReach
-                                done = true
                             }
                         }
+
                         else if (properties.coordsToReach[0] - (properties.coords[0] + horizontalIncrement) <= 0) {
                             if (cosTheta >= 0) {
                                 properties.coords = properties.coordsToReach
-                                done = true
+                                properties.inMotion = false
                             }
                             else if (cosTheta < 0) {
-                                properties.coords[0] = properties.coords[0] + horizontalIncrement
-                                properties.coords[1] = slope * (properties.coords[0] - x0) + y0
+                                properties.coords = createPoint(
+                                    properties.coords[0] + horizontalIncrement,
+                                    slope * (properties.coords[0] - x0) + y0
+                                )
                             }
                         }
-                    }
 
-                    if (reached === false) {
-                        //reached === false ensures that it does not get self's image data when putImageData() is not called.
-                        //gets the image data behind at shifted coords
+                        //get the image data behind for the current coords
                         imageDataBehind = getObjectImageData()
 
+                        //draw object at new incremented coords
                         ctx.fillStyle = 'blue'
                         ctx.fillRect(properties.coords[0], properties.coords[1], properties.width, properties.height)
-                        if (done) {
-                            reached = true
-                            done = false
-                        }
                     }
                 },
 
                 moveTo(coords) {
                     properties.coordsToReach = coords
-                    reached = false
+                    calculated = false
+                    properties.inMotion = true
                 },
 
                 getProperties() {
@@ -162,11 +170,17 @@ function main() {
         let heroInitialCoords = createPoint(100, 100)
         let currentMouseCoords
 
+        paintBackground(ctx, '#3a2081')
+        const backgroundImageData = getImageData(0,0, ctx.canvas.width, ctx.canvas.height)
         const theHero = playerObject(ctx, heroInitialCoords)
-        const theHero2 = playerObject(ctx, createPoint(200,200))
+        const theHero2 = playerObject(ctx, createPoint(200, 200))
         const theHeroProps = theHero.getProperties()
         const theCursor = moveHereCursor(ctx, 'lightgreen')
         const theCursorProps = theCursor.getProperties()
+
+        const clearMovedObjects = () => {
+
+        }
 
         function paintScene() {
             // paintBackground(ctx, '#3a2081')
@@ -180,9 +194,6 @@ function main() {
             //     ctx.fillText(`x:${currentMouseCoords[0]}, y:${currentMouseCoords[1]}`, currentMouseCoords[0], currentMouseCoords[1])
             // }
         }
-
-        paintBackground(ctx, '#3a2081')
-        paintScene()
 
         canvas.addEventListener('click', (event) => {
             let mouseCoords = createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
