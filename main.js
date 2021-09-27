@@ -1,9 +1,5 @@
 import { createPoint, setCanvasFont, getFontHeight, getCharacterWidth, isXYInsideBox, paintBackground } from './modules/canvas.js';
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
-}
-
 function main() {
     const canvas = document.getElementById('scene')
     if (canvas.getContext) {
@@ -48,7 +44,7 @@ function main() {
             }
         }
 
-        const playerObject = (ctx, initialCoords) => {
+        const playerObject = (ctx, initialCoords, allObjects = []) => {
             const properties = {
                 coords: initialCoords,
                 width: 40,
@@ -59,16 +55,41 @@ function main() {
             }
 
             let slope, x0, y0, cosTheta, horizontalIncrement;
+            let prevCoords
             let calculated = false
 
+            function isColliding(allObjects) {
+                let bottomRightCoords = createPoint(properties.coords[0] + properties.width, properties.coords[1] + properties.height)
+                allObjects.forEach((obj) => {
+                    let props = obj.getProperties()
+                    let objBottomLeftCoords = createPoint(props.coords[0], props.coords[1] + props.Hight)
+                    let objBottomRightCoords = createPoint(props.coords[0] + props.width, props.coords[1] + props.height)
+                    let objTopRightCoords = createPoint(props.coords[0] + props.width, props.coords[1])
+                    if (isXYInsideBox(props.coords, properties.coords, bottomRightCoords)) {
+                        return true
+                    }
+                    if (isXYInsideBox(objTopRightCoords, properties.coords, bottomRightCoords)) {
+                        return true
+                    }
+                    if (isXYInsideBox(objBottomRightCoords, properties.coords, bottomRightCoords)) {
+                        return true
+                    }
+                    if (isXYInsideBox(objBottomLeftCoords, properties.coords, bottomRightCoords)) {
+                        return true
+                    }
+                })
+                return false
+            }
             //initial draw
             ctx.fillStyle = 'blue'
             ctx.fillRect(properties.coords[0], properties.coords[1], properties.width, properties.height)
+
 
             return {
                 draw() {
                     if (properties.inMotion === true) {
                         if (properties.coordsToReach !== properties.coords) {
+                            prevCoords = properties.coords
                             if (calculated === false) {
                                 let deltaX = properties.coordsToReach[0] - properties.coords[0]
                                 let deltaY = properties.coordsToReach[1] - properties.coords[1]
@@ -113,8 +134,11 @@ function main() {
                                 }
                             }
                         }
-                        //draw object at new incremented coords
+                        if(isColliding(allObjects)){
+                            properties.coors = prevCoords
+                        }
                     }
+                    //draw object at new incremented coords
                     ctx.fillStyle = 'blue'
                     ctx.fillRect(properties.coords[0], properties.coords[1], properties.width, properties.height)
                 },
@@ -139,10 +163,11 @@ function main() {
         let currentMouseCoords
         const backgroundImageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height)
         // paintBackground(ctx, 'black')
-        const theHero = playerObject(ctx, heroInitialCoords)
-        const theHero2 = playerObject(ctx, createPoint(200, 200))
+        const allObjects = []
+        const theHero = playerObject(ctx, heroInitialCoords, allObjects)
+        const theHero2 = playerObject(ctx, createPoint(200, 200), allObjects)
+        allObjects.push(theHero, theHero2)
         const cursors = []
-        const AllObjects = [theHero, theHero2]
 
         const clearMovedObjects = (objects, backgroundImageData) => {
             objects.forEach(obj => {
@@ -182,7 +207,7 @@ function main() {
 
         function paintScene() {
             // paintBackground(ctx, '#3a2081')
-            clearMovedObjects(AllObjects, backgroundImageData)
+            clearMovedObjects(allObjects, backgroundImageData)
             clearCursor(cursors)
             theHero.draw()
             theHero2.draw()

@@ -21,8 +21,8 @@ const getCharacterWidth = (ctx, character) => {
     return ctx.measureText(character).width
 }
 
-const isXYInsideBox = (x, y, X1, Y1, X2, Y2) => {
-            return (x > X1 && x <= X2 && y >= Y1 && y <= Y2)
+const isXYInsideBox = (point, topLeftCoords, bottomRightCoords) => {
+            return (point[0] > topLeftCoords[0] && point[0] <= bottomRightCoords[0] && point[1] >= topLeftCoords[1] && point[1] <= bottomRightCoords[1])
         }
 
 const paintBackground = (ctx, color, width, height) => {
