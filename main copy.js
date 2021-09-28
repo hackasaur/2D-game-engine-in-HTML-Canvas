@@ -4,11 +4,10 @@ function main() {
     const canvas = document.getElementById('scene')
     if (canvas.getContext) {
         const ctx = canvas.getContext('2d')
-        ctx.canvas.width = window.innerWidth - 20
+        ctx.canvas.width = window.innerWidth / 2
         ctx.canvas.height = window.innerHeight - 20
         // ctx.imageSmoothingEnabled = false
         // ctx.translate(0.5, 0.5)
-
         const moveHereCursor = (ctx, coords, color) => {
             const properties = {
                 coords: coords,
@@ -46,7 +45,7 @@ function main() {
             }
         }
 
-        const createObject = (ctx, name, initialCoords, allObjects = []) => {
+        const playerObject = (ctx, name, initialCoords, allObjects = []) => {
             const properties = {
                 name: name,
                 coords: initialCoords,
@@ -159,9 +158,9 @@ function main() {
                     }
 
                     //draw object at new incremented coords
-                    ctx.shadowColor = 'rgba(0, 0, 0, .3)';
-                    ctx.shadowOffsetX = -5;
-                    ctx.shadowOffsetY = 5;
+                    // ctx.shadowColor = 'grey'
+                    // ctx.shadowOffsetX = 10;
+                    // ctx.shadowOffsetY = 10;
                     ctx.fillStyle = properties.color
                     ctx.fillRect(properties.coords[0], properties.coords[1], properties.width, properties.height)
                 },
@@ -178,81 +177,105 @@ function main() {
             }
         }
 
+        paintBackground(ctx, '#3a2081')
+
         let isDebugging = true
         let currentMouseCoords
+        let heroInitialCoords = createPoint(100, 100)
+
+        const backgroundImageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height)
+        // paintBackground(ctx, 'black')
         const allObjects = []
 
-        let heroInitialCoords = createPoint(100, 100)
-        const theHero = createObject(ctx, 'hero', heroInitialCoords, allObjects)
-        const theHero2 = createObject(ctx, 'hero2', createPoint(200, 200), allObjects)
+        const theHero = playerObject(ctx, 'hero', heroInitialCoords, allObjects)
+        const theHero2 = playerObject(ctx, 'hero2', createPoint(200, 200), allObjects)
         allObjects.push(theHero, theHero2)
 
         let colors = ['blue', 'yellow', 'orange', 'grey']
 
         //create random objects
-        for (let i = 0; i < 14; i++) {
+        for (let i = 0; i < 10; i++) {
             let obj
-            obj = createObject(ctx, `obj${i}`, createPoint(ctx.canvas.width * Math.random(), ctx.canvas.height * Math.random()))
+            obj = playerObject(ctx, `obj${i}`, createPoint(ctx.canvas.width * Math.random(), ctx.canvas.height * Math.random()))
             let props = obj.getProperties()
             props.color = colors[Math.floor(3 * Math.random())]
-            props.width = Math.round(70 * Math.random())
-            props.height = Math.round(70 * Math.random())
+            props.width = Math.round(50 * Math.random())
+            props.height = Math.round(50 * Math.random())
             console.log(obj.getProperties())
             allObjects.push(obj)
         }
 
         const cursors = []
 
+        const clearMovedObjects = (objects, backgroundImageData) => {
+            objects.forEach(obj => {
+                let properties = obj.getProperties()
+                if (properties.inMotion) {
+                    ctx.putImageData(
+                        backgroundImageData,
+                        properties.coords[0],
+                        properties.coords[1],
+                        0,
+                        0,
+                        properties.width + 1,
+                        properties.height + 1)
+                }
+            })
+        }
+
+        const clearCursor = (cursors, backgroundImageData) => {
+            cursors.forEach((cursor) => {
+                let properties = cursor.getProperties()
+                if (properties.isAnimating) {
+                    ctx.putImageData(
+                        backgroundImageData,
+                        properties.coords[0] - properties.radius - properties.lineWidth,
+                        properties.coords[1] - properties.radius - properties.lineWidth,
+                        0,
+                        0,
+                        2 * (properties.radius + properties.lineWidth),
+                        2 * (properties.radius + properties.lineWidth)
+                    )
+                }
+                else if (properties.isAnimation === false) {
+                    cursors.pop(cursor)
+                }
+            })
+        }
+
         function paintScene() {
+            clearMovedObjects(allObjects, backgroundImageData)
+            clearCursor(cursors, backgroundImageData)
             allObjects.forEach((obj) => { obj.draw() })
             cursors.forEach((cursor) => { cursor.draw() })
 
-                  }
+            // if (isDebugging && currentMouseCoords) {
+            //     setCanvasFont(ctx, { fontStyle: 'Fira Mono', fontColor: 'grey', fontSize: '15' })
+            //     ctx.fillText(`x:${currentMouseCoords[0]}, y:${currentMouseCoords[1]}`, currentMouseCoords[0], currentMouseCoords[1])
+            // }
+        }
 
         canvas.addEventListener('click', (event) => {
             let mouseCoords = createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
             theHero.moveTo(mouseCoords)
             theHero2.moveTo(mouseCoords)
-            cursors.push(moveHereCursor(ctx, mouseCoords, 'GreenYellow'))
+            cursors.push(moveHereCursor(ctx, mouseCoords, 'lightgreen'))
         })
 
         canvas.addEventListener('mousemove', (event) => {
             currentMouseCoords = createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
         })
 
-        let secondsPassed
-        let oldTimeStamp
-        let fps;
         let frame = 1
-
-        function gameLoop(timeStamp) {
-            paintBackground(ctx, '#3a2081')
+        function gameLoop() {
             paintScene()
-
-            //FPS
-            // Calculate the number of seconds passed since the last frame
-            secondsPassed = (timeStamp - oldTimeStamp) / 1000;
-            oldTimeStamp = timeStamp
-            // Calculate fps
-            fps = Math.round(1 / secondsPassed);
-            //show fps
-            ctx.shadowColor = 'rgba(0, 0, 0, 0)'
-            ctx.fillStyle = 'black'
-            setCanvasFont(ctx, { font: 'Arial', size: '25px', color: 'white' })
-            ctx.fillText("FPS: " + fps, 10, 10)
-            
-            //mouse coordinates
-            if (isDebugging && currentMouseCoords) {
-                setCanvasFont(ctx, { fontStyle: 'Fira Mono', fontColor: 'grey', fontSize: '15' })
-                ctx.fillText(`x:${currentMouseCoords[0]}, y:${currentMouseCoords[1]}`, currentMouseCoords[0], currentMouseCoords[1])
-            }
-
-            frame++
-            console.log('frame #')
 
             if (frame <= 5000) {
                 window.requestAnimationFrame(gameLoop)
             }
+
+            frame++
+            console.log('frame #')
         }
         gameLoop()
 

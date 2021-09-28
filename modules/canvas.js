@@ -9,8 +9,8 @@ const createPoint = (x, y) => {
 }
 
 const setCanvasFont = (ctx, font) => {
-    ctx.fillStyle = `${font.fontColor}`
-    ctx.font = `${font.fontSize}px ${font.fontStyle}`
+    ctx.fillStyle = `${font.color}`
+    ctx.font = `${font.size}px ${font.font}`
 }
 
 const getFontHeight = (ctx) => {
