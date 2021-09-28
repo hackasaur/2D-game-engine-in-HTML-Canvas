@@ -6,7 +6,8 @@ function main() {
         const ctx = canvas.getContext('2d')
         ctx.canvas.width = window.innerWidth / 2
         ctx.canvas.height = window.innerHeight - 20
-
+        // ctx.imageSmoothingEnabled = false
+        // ctx.translate(0.5, 0.5)
         const moveHereCursor = (ctx, coords, color) => {
             const properties = {
                 coords: coords,
@@ -44,10 +45,12 @@ function main() {
             }
         }
 
-        const playerObject = (ctx, initialCoords, allObjects = []) => {
+        const playerObject = (ctx, name, initialCoords, allObjects = []) => {
             const properties = {
+                name: name,
                 coords: initialCoords,
-                width: 40,
+                color: 'white',
+                width: 30,
                 height: 60,
                 coordsToReach: initialCoords,
                 speed: 1,
@@ -58,32 +61,45 @@ function main() {
             let prevCoords
             let calculated = false
 
-            function isColliding(allObjects) {
+            function isColliding(self, allObjects) {
                 let bottomRightCoords = createPoint(properties.coords[0] + properties.width, properties.coords[1] + properties.height)
-                allObjects.forEach((obj) => {
+                let colliding = false
+                let object
+                for (let obj of allObjects) {
+                    if (self === obj) {
+                        continue
+                    }
+
                     let props = obj.getProperties()
-                    let objBottomLeftCoords = createPoint(props.coords[0], props.coords[1] + props.Hight)
+                    let objBottomLeftCoords = createPoint(props.coords[0], props.coords[1] + props.height)
                     let objBottomRightCoords = createPoint(props.coords[0] + props.width, props.coords[1] + props.height)
                     let objTopRightCoords = createPoint(props.coords[0] + props.width, props.coords[1])
                     if (isXYInsideBox(props.coords, properties.coords, bottomRightCoords)) {
-                        return true
+                        colliding = true
+                        object = props
+                        break
                     }
                     if (isXYInsideBox(objTopRightCoords, properties.coords, bottomRightCoords)) {
-                        return true
+                        colliding = true
+                        object = props
+                        break
                     }
                     if (isXYInsideBox(objBottomRightCoords, properties.coords, bottomRightCoords)) {
-                        return true
+                        colliding = true
+                        object = props
+                        break
                     }
                     if (isXYInsideBox(objBottomLeftCoords, properties.coords, bottomRightCoords)) {
-                        return true
+                        colliding = true
+                        object = props
+                        break
                     }
-                })
-                return false
+                }
+                if (colliding) {
+                    console.log('collided with: ', object)
+                }
+                return colliding
             }
-            //initial draw
-            ctx.fillStyle = 'blue'
-            ctx.fillRect(properties.coords[0], properties.coords[1], properties.width, properties.height)
-
 
             return {
                 draw() {
@@ -134,12 +150,18 @@ function main() {
                                 }
                             }
                         }
-                        if(isColliding(allObjects)){
-                            properties.coors = prevCoords
+
+                        if (isColliding(this, allObjects)) {
+                            console.log('collided')
+                            properties.coords = prevCoords
                         }
                     }
+
                     //draw object at new incremented coords
-                    ctx.fillStyle = 'blue'
+                    // ctx.shadowColor = 'grey'
+                    // ctx.shadowOffsetX = 10;
+                    // ctx.shadowOffsetY = 10;
+                    ctx.fillStyle = properties.color
                     ctx.fillRect(properties.coords[0], properties.coords[1], properties.width, properties.height)
                 },
 
@@ -158,15 +180,31 @@ function main() {
         paintBackground(ctx, '#3a2081')
 
         let isDebugging = true
+        let currentMouseCoords
         let heroInitialCoords = createPoint(100, 100)
 
-        let currentMouseCoords
         const backgroundImageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height)
         // paintBackground(ctx, 'black')
         const allObjects = []
-        const theHero = playerObject(ctx, heroInitialCoords, allObjects)
-        const theHero2 = playerObject(ctx, createPoint(200, 200), allObjects)
+
+        const theHero = playerObject(ctx, 'hero', heroInitialCoords, allObjects)
+        const theHero2 = playerObject(ctx, 'hero2', createPoint(200, 200), allObjects)
         allObjects.push(theHero, theHero2)
+
+        let colors = ['blue', 'yellow', 'orange', 'grey']
+
+        //create random objects
+        for (let i = 0; i < 10; i++) {
+            let obj
+            obj = playerObject(ctx, `obj${i}`, createPoint(ctx.canvas.width * Math.random(), ctx.canvas.height * Math.random()))
+            let props = obj.getProperties()
+            props.color = colors[Math.floor(3 * Math.random())]
+            props.width = Math.round(50 * Math.random())
+            props.height = Math.round(50 * Math.random())
+            console.log(obj.getProperties())
+            allObjects.push(obj)
+        }
+
         const cursors = []
 
         const clearMovedObjects = (objects, backgroundImageData) => {
@@ -185,7 +223,7 @@ function main() {
             })
         }
 
-        const clearCursor = (cursors) => {
+        const clearCursor = (cursors, backgroundImageData) => {
             cursors.forEach((cursor) => {
                 let properties = cursor.getProperties()
                 if (properties.isAnimating) {
@@ -206,11 +244,9 @@ function main() {
         }
 
         function paintScene() {
-            // paintBackground(ctx, '#3a2081')
             clearMovedObjects(allObjects, backgroundImageData)
-            clearCursor(cursors)
-            theHero.draw()
-            theHero2.draw()
+            clearCursor(cursors, backgroundImageData)
+            allObjects.forEach((obj) => { obj.draw() })
             cursors.forEach((cursor) => { cursor.draw() })
 
             // if (isDebugging && currentMouseCoords) {
@@ -243,7 +279,7 @@ function main() {
         }
         gameLoop()
 
-        // setInterval(paintScene, 100)
+        // setInterval(paintScene, 500)
     }
 }
 

@@ -22,7 +22,11 @@ const getCharacterWidth = (ctx, character) => {
 }
 
 const isXYInsideBox = (point, topLeftCoords, bottomRightCoords) => {
-            return (point[0] > topLeftCoords[0] && point[0] <= bottomRightCoords[0] && point[1] >= topLeftCoords[1] && point[1] <= bottomRightCoords[1])
+            return (
+                point[0] >= topLeftCoords[0] && 
+                point[0] <= bottomRightCoords[0] && 
+                point[1] >= topLeftCoords[1] && 
+                point[1] <= bottomRightCoords[1])
         }
 
 const paintBackground = (ctx, color, width, height) => {
