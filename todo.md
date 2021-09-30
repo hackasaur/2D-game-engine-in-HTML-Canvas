@@ -1,6 +1,14 @@
 # bugs
-- object passes through middle of objects horizontally bigger than self *-sept 28 19:30*
-- move here cursor doesn' look sharp
+- [x] object passes through middle of objects horizontally bigger than self *-sept 28 19:30*
+    - solved the bug by lazy fix, now both objects corner points are checked with respect to other
+- [ ] move here cursor doesn't look sharp
+- [ ] weird vibrations when moving objects collide
+    - collisions should be calculated after updates and collision in between 2 frames should be considered  
+
+# todo
+- [ ] speed should be calcuated in px/ms instead of px/frame to make it frame rate independent
+- [ ] speed should stop after one collision 
+- [ ] use pointInsidePath() inbuilt function instead of XYYinBox 
 
 # features
 - point light source
@@ -8,6 +16,12 @@
 - debugging mode
 
 # notes
+**---oct 1---**
+collision could get skipped between 2 frames or a gap may show between objects 
+
+**---sept 29---**
+calculate speed in px/ms so that it's frame rate independent. 
+
 **---sept 28---**
 dumped the idea of rendering only pixels that are changing due to weird bug that contracted edges of rectangles under the cursor area.
 setInterval is good idea for slowing down frame rate for debugging.
