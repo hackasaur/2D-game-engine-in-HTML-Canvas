@@ -25,6 +25,15 @@ export const isPointInsideBox = (point, topLeftCoords, bottomRightCoords) => {
                 point[1] <= bottomRightCoords[1])
         }
 
+
+export const isPointInsideBox2 = (point, topLeftCoords, width, height) => {
+            return (
+                point[0] >= topLeftCoords[0] && 
+                point[0] <= topLeftCoords[0] + width && 
+                point[1] >= topLeftCoords[1] && 
+                point[1] <= topLeftCoords[1] + height)
+        }
+
 export const paintBackground = (ctx, color, width, height) => {
     ctx.fillStyle = color
     ctx.fillRect(0,0,ctx.canvas.width, ctx.canvas.height)

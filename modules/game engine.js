@@ -1,5 +1,65 @@
 import * as canvasTools from './canvas tools.js';
 
+const areBoxesOverlapping = (topLeftCoords1, width1, height1, topLeftCoords2, width2, height2) => {
+    let topRightCoords1 = canvasTools.createPoint(topLeftCoords1[0] + width1, topLeftCoords1[1])
+    let bottomRightCoords1 = canvasTools.createPoint(topLeftCoords1[0] + width1, topLeftCoords1[1] + height1)
+    let bottomLeftCoords1 = canvasTools.createPoint(topLeftCoords1[0], topLeftCoords1[1] + height1)
+
+    if (canvasTools.isPointInsideBox2(topLeftCoords1, topLeftCoords2, width2, height2) ||
+        canvasTools.isPointInsideBox2(topRightCoords1, topLeftCoords2, width2, height2) ||
+        canvasTools.isPointInsideBox2(bottomRightCoords1, topLeftCoords2, width2, height2) ||
+        canvasTools.isPointInsideBox2(bottomLeftCoords1, topLeftCoords2, width2, height2)
+    ) {
+        return true
+    }
+
+    let topRightCoords2 = canvasTools.createPoint(topLeftCoords2[0] + width2, topLeftCoords2[1])
+    let bottomRightCoords2 = canvasTools.createPoint(topLeftCoords2[0] + width2, topLeftCoords2[1] + height2)
+    let bottomLeftCoords2 = canvasTools.createPoint(topLeftCoords2[0], topLeftCoords2[1] + height2)
+
+    if (canvasTools.isPointInsideBox2(topLeftCoords2, topLeftCoords1, width1, height1) ||
+        canvasTools.isPointInsideBox2(topRightCoords2, topLeftCoords1, width1, height1) ||
+        canvasTools.isPointInsideBox2(bottomRightCoords2, topLeftCoords1, width1, height1) ||
+        canvasTools.isPointInsideBox2(bottomLeftCoords2, topLeftCoords1, width1, height1)
+    ) {
+        return true
+    }
+    return false
+}
+
+const checkCollisionAndUpdate = (objects) => {
+    let objectsDone = []
+    let objectsColliding = []
+    function areColliding(object1, object2) {
+        let colliding = false
+        let props1 = object1.getProperties()
+        let props2 = object2.getProperties()
+
+        colliding = areBoxesOverlapping(props2.coords, props2.width, props2.height, props1.coords, props1.width, props1.height)
+
+        if (colliding) {
+            console.log(props1.name, ' collided with ', props2.name)
+        }
+        return colliding
+    }
+
+    for (let object1 of objects) {
+        for (let object2 of objects) {
+            if (objectsDone.includes(object2) || object1 === object2) {
+                continue
+            }
+            else {
+                if (areColliding(object1, object2)) {
+                    object1.undoUpdate()
+                    object2.undoUpdate()
+                    break
+                }
+            }
+        }
+        objectsDone.push(object1)
+    }
+}
+
 export const createObject = (ctx, name, initialCoords, allObjects = []) => {
     const properties = {
         name: name,
@@ -9,7 +69,8 @@ export const createObject = (ctx, name, initialCoords, allObjects = []) => {
         height: 60,
         coordsToReach: initialCoords,
         speed: 1.5,
-        inMotion: false
+        inMotion: false,
+        selectable: false
     }
 
     let slope, x0, y0, cosTheta, horizontalIncrement, prevCoords
@@ -23,32 +84,9 @@ export const createObject = (ctx, name, initialCoords, allObjects = []) => {
                 continue
             }
 
-            let bottomRightCoords = canvasTools.createPoint(properties.coords[0] + properties.width, properties.coords[1] + properties.height)
             let props = obj.getProperties()
-            let objBottomLeftCoords = canvasTools.createPoint(props.coords[0], props.coords[1] + props.height)
-            let objBottomRightCoords = canvasTools.createPoint(props.coords[0] + props.width, props.coords[1] + props.height)
-            let objTopRightCoords = canvasTools.createPoint(props.coords[0] + props.width, props.coords[1])
 
-            if (canvasTools.isPointInsideBox(props.coords, properties.coords, bottomRightCoords) ||
-                canvasTools.isPointInsideBox(objTopRightCoords, properties.coords, bottomRightCoords) ||
-                canvasTools.isPointInsideBox(objBottomRightCoords, properties.coords, bottomRightCoords) ||
-                canvasTools.isPointInsideBox(objBottomLeftCoords, properties.coords, bottomRightCoords)
-            ) {
-                colliding = true
-                objectName = props.name
-                break
-            }
-
-            bottomRightCoords = canvasTools.createPoint(props.coords[0] + props.width, props.coords[1] + props.height)
-            objBottomLeftCoords = canvasTools.createPoint(properties.coords[0], properties.coords[1] + properties.height)
-            objBottomRightCoords = canvasTools.createPoint(properties.coords[0] + properties.width, properties.coords[1] + properties.height)
-            objTopRightCoords = canvasTools.createPoint(properties.coords[0] + properties.width, properties.coords[1])
-
-            if (canvasTools.isPointInsideBox(properties.coords, props.coords, bottomRightCoords) ||
-                canvasTools.isPointInsideBox(objTopRightCoords, props.coords, bottomRightCoords) ||
-                canvasTools.isPointInsideBox(objBottomRightCoords, props.coords, bottomRightCoords) ||
-                canvasTools.isPointInsideBox(objBottomLeftCoords, props.coords, bottomRightCoords)
-            ) {
+            if (areBoxesOverlapping(properties.coords, properties.width, properties.height, props.coords, props.width, props.height)) {
                 colliding = true
                 objectName = props.name
                 break
@@ -126,19 +164,23 @@ export const createObject = (ctx, name, initialCoords, allObjects = []) => {
                 }
             }
 
-            if (isColliding(this, allObjects)) {
-                properties.coords = prevCoords
-            }
+            // if (isColliding(this, allObjects)) {
+            //     properties.coords = prevCoords
+            // }
         },
 
         moveTo(coords) {
             properties.coordsToReach = coords
             calculated = false
-            // properties.inMotion = true
+            properties.inMotion = true
         },
 
         getProperties() {
             return properties
+        },
+
+        undoUpdate() {
+            properties.coords = prevCoords
         }
     }
 }
@@ -181,7 +223,15 @@ export const spawnMoveHereCursor = (ctx, coords, color) => {
 }
 
 export const updateAndPaintScene = (sceneObjects, sceneCursors) => {
-    sceneObjects.forEach((obj) => { obj.update(); obj.draw() })
+    sceneObjects.forEach((obj) => {
+        obj.update()
+    })
+
+    checkCollisionAndUpdate(sceneObjects)
+
+    sceneObjects.forEach((obj) => {
+        obj.draw()
+    })
 
     for (let i = 0; i < sceneCursors.length; i++) {
         let cursor = sceneCursors[i]
@@ -193,4 +243,56 @@ export const updateAndPaintScene = (sceneObjects, sceneCursors) => {
             sceneCursors.splice(i, 1)
         }
     }
+}
+
+export const startGameLoop = (canvas, allObjects, cursors, isDebugging = false, code = () => { return 0 }) => {
+    //allObjects is a array containing all the objects of the scene. 
+    //cursors is a array used to store the all the current moveHereCursors
+    let mouseCoords
+    let secondsPassed
+    let oldTimeStamp
+    let fps;
+    let frame = 1
+    let ctx = canvas.getContext('2d')
+
+    canvas.addEventListener('click', (event) => {
+        mouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
+        cursors.push(spawnMoveHereCursor(ctx, mouseCoords, 'GreenYellow'))
+    })
+
+    canvas.addEventListener('mousemove', (event) => {
+        mouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
+    })
+
+    function gameLoop(timeStamp) {
+        canvasTools.paintBackground(ctx, '#353347')
+        code()
+        updateAndPaintScene(allObjects, cursors)
+
+        //FPS
+        // Calculate the number of seconds passed since the last frame
+        secondsPassed = (timeStamp - oldTimeStamp) / 1000;
+        oldTimeStamp = timeStamp
+        // Calculate fps
+        fps = Math.round(1 / secondsPassed);
+        //show fps
+        ctx.shadowColor = 'rgba(0, 0, 0, 0)'
+        ctx.fillStyle = 'black'
+        canvasTools.setCanvasFont(ctx, { font: 'Arial', size: '25px', color: 'white' })
+        ctx.fillText("FPS: " + fps, 50, 20)
+
+        //mouse coordinates
+        if (isDebugging && mouseCoords) {
+            canvasTools.setCanvasFont(ctx, { fontStyle: 'Fira Mono', fontColor: 'grey', fontSize: '15' })
+            ctx.fillText(`x:${mouseCoords[0]}, y:${mouseCoords[1]}`, mouseCoords[0], mouseCoords[1])
+        }
+
+        frame++
+        console.log('frame #')
+
+        if (frame <= 5000) {
+            window.requestAnimationFrame(gameLoop)
+        }
+    }
+    gameLoop()
 }

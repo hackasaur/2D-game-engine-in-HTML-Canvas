@@ -8,7 +8,8 @@
 # todo
 - [ ] speed should be calcuated in px/ms instead of px/frame to make it frame rate independent
 - [ ] speed should stop after one collision 
-- [ ] use pointInsidePath() inbuilt function instead of XYYinBox 
+- [ ] use pointInPath() inbuilt function instead of the pointInsideBox() 
+- [ ] make a seperate game engine module
 
 # features
 - point light source
