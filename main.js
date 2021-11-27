@@ -27,10 +27,9 @@ function main() {
 		for (let i = 0; i < 8; i++) {
 			let obj
 			obj = gameEngine.createObject(ctx, `obj${i}`, canvasTools.createPoint(ctx.canvas.width * Math.random(), ctx.canvas.height * Math.random()))
-			let props = obj.getProperties()
-			props.color = colors[Math.floor(3 * Math.random())]
-			props.width = Math.round(10 + 60 * Math.random())
-			props.height = Math.round(10 + 60 * Math.random())
+			obj.properties.color = colors[Math.floor(3 * Math.random())]
+			obj.properties.width = Math.round(10 + 60 * Math.random())
+			obj.properties.height = Math.round(10 + 60 * Math.random())
 			allObjects.push(obj)
 		}
 

@@ -5,10 +5,10 @@ const areBoxesOverlapping = (topLeftCoords1, width1, height1, topLeftCoords2, wi
     let bottomRightCoords1 = canvasTools.createPoint(topLeftCoords1[0] + width1, topLeftCoords1[1] + height1)
     let bottomLeftCoords1 = canvasTools.createPoint(topLeftCoords1[0], topLeftCoords1[1] + height1)
 
-    if (canvasTools.isPointInsideBox2(topLeftCoords1, topLeftCoords2, width2, height2) ||
-        canvasTools.isPointInsideBox2(topRightCoords1, topLeftCoords2, width2, height2) ||
-        canvasTools.isPointInsideBox2(bottomRightCoords1, topLeftCoords2, width2, height2) ||
-        canvasTools.isPointInsideBox2(bottomLeftCoords1, topLeftCoords2, width2, height2)
+    if (canvasTools.isPointInsideBox(topLeftCoords1, topLeftCoords2, width2, height2) ||
+        canvasTools.isPointInsideBox(topRightCoords1, topLeftCoords2, width2, height2) ||
+        canvasTools.isPointInsideBox(bottomRightCoords1, topLeftCoords2, width2, height2) ||
+        canvasTools.isPointInsideBox(bottomLeftCoords1, topLeftCoords2, width2, height2)
     ) {
         return true
     }
@@ -17,10 +17,10 @@ const areBoxesOverlapping = (topLeftCoords1, width1, height1, topLeftCoords2, wi
     let bottomRightCoords2 = canvasTools.createPoint(topLeftCoords2[0] + width2, topLeftCoords2[1] + height2)
     let bottomLeftCoords2 = canvasTools.createPoint(topLeftCoords2[0], topLeftCoords2[1] + height2)
 
-    if (canvasTools.isPointInsideBox2(topLeftCoords2, topLeftCoords1, width1, height1) ||
-        canvasTools.isPointInsideBox2(topRightCoords2, topLeftCoords1, width1, height1) ||
-        canvasTools.isPointInsideBox2(bottomRightCoords2, topLeftCoords1, width1, height1) ||
-        canvasTools.isPointInsideBox2(bottomLeftCoords2, topLeftCoords1, width1, height1)
+    if (canvasTools.isPointInsideBox(topLeftCoords2, topLeftCoords1, width1, height1) ||
+        canvasTools.isPointInsideBox(topRightCoords2, topLeftCoords1, width1, height1) ||
+        canvasTools.isPointInsideBox(bottomRightCoords2, topLeftCoords1, width1, height1) ||
+        canvasTools.isPointInsideBox(bottomLeftCoords2, topLeftCoords1, width1, height1)
     ) {
         return true
     }
@@ -32,13 +32,11 @@ const checkCollisionAndUpdate = (objects) => {
     let objectsColliding = []
     function areColliding(object1, object2) {
         let colliding = false
-        let props1 = object1.getProperties()
-        let props2 = object2.getProperties()
 
-        colliding = areBoxesOverlapping(props2.coords, props2.width, props2.height, props1.coords, props1.width, props1.height)
+        colliding = areBoxesOverlapping(object2.properties.coords, object2.properties.width, object2.properties.height, object1.properties.coords, object1.properties.width, object1.properties.height)
 
         if (colliding) {
-            console.log(props1.name, ' collided with ', props2.name)
+            console.log(object1.properties.name, ' collided with ', object2.properties.name)
         }
         return colliding
     }
@@ -77,18 +75,17 @@ export const createObject = (ctx, name, initialCoords, allObjects = []) => {
     let calculated = false
 
     function isColliding(self, allObjects) {
+        //returns true/false if the object is colliding with other objects
         let colliding = false
         let objectName
-        for (let obj of allObjects) {
-            if (self === obj) {
+        for (let object of allObjects) {
+            if (self === object) {
                 continue
             }
 
-            let props = obj.getProperties()
-
-            if (areBoxesOverlapping(properties.coords, properties.width, properties.height, props.coords, props.width, props.height)) {
+            if (areBoxesOverlapping(properties.coords, properties.width, properties.height, object.properties.coords, object.properties.width, object.properties.height)) {
                 colliding = true
-                objectName = props.name
+                objectName = object.properties.name
                 break
             }
         }
@@ -100,8 +97,8 @@ export const createObject = (ctx, name, initialCoords, allObjects = []) => {
     }
 
     return {
+        properties,
         draw() {
-            // console.log('drawing object ', properties)
             let path = new Path2D
             ctx.shadowColor = 'rgba(0, 0, 0, 0.3)'
             ctx.shadowOffsetX = -5;
@@ -134,7 +131,7 @@ export const createObject = (ctx, name, initialCoords, allObjects = []) => {
                 //logic for moving in a line towards the target coords
                 /* we can simply add a shift in the coords along the slope but the destination point will get missed and the object 
                 will not stop  at that point...to avoid this, in the case when the horizontal shift will go ahead of the destination 
-                point i move the object to the destination directly and stop. */
+                point it will move the object to the destination directly and stop. */
                 if (properties.coordsToReach[0] - (properties.coords[0] + horizontalIncrement) > 0) {
                     if (cosTheta >= 0) {
                         //moving towards right
@@ -175,10 +172,6 @@ export const createObject = (ctx, name, initialCoords, allObjects = []) => {
             properties.inMotion = true
         },
 
-        getProperties() {
-            return properties
-        },
-
         undoUpdate() {
             properties.coords = prevCoords
         }
@@ -198,6 +191,7 @@ export const spawnMoveHereCursor = (ctx, coords, color) => {
     let animationRadius = properties.radius
 
     return {
+        properties,
         draw: () => {
             if (properties.isAnimating) {
                 let path = new Path2D
@@ -216,9 +210,6 @@ export const spawnMoveHereCursor = (ctx, coords, color) => {
                 }
             }
         },
-        getProperties: () => {
-            return properties
-        }
     }
 }
 
@@ -235,7 +226,7 @@ export const updateAndPaintScene = (sceneObjects, sceneCursors) => {
 
     for (let i = 0; i < sceneCursors.length; i++) {
         let cursor = sceneCursors[i]
-        let isAnimating = cursor.getProperties().isAnimating
+        let isAnimating = cursor.properties.isAnimating
         if (isAnimating) {
             cursor.draw()
         }
