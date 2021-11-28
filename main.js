@@ -18,9 +18,9 @@ function main() {
 
 		let heroInitialCoords = canvasTools.createPoint(100, 100)
 		const theHero = gameEngine.createObject(ctx, 'hero', heroInitialCoords, allObjects)
-		const theHero2 = gameEngine.createObject(ctx, 'hero2', canvasTools.createPoint(200, 200), allObjects)
-		allObjects.push(theHero, theHero2)
-
+		// const theHero2 = gameEngine.createObject(ctx, 'hero2', canvasTools.createPoint(200, 200), allObjects)
+		allObjects.push(theHero)
+		// allObjects.push(theHero2)
 
 		let colors = ['blue', 'yellow', 'orange', 'grey']
 		// create random objects
@@ -40,7 +40,7 @@ function main() {
 		canvas.addEventListener('click', (event) => {
 			let mouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
 			theHero.moveTo(mouseCoords)
-			theHero2.moveTo(mouseCoords)
+			// theHero2.moveTo(mouseCoords)
 			// cursors.push(gameEngine.spawnMoveHereCursor(ctx, mouseCoords, 'GreenYellow'))
 		})
 

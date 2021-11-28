@@ -8,7 +8,8 @@
 
 # todo
 - [ ] use quadtree for collision optimization
-- [ ] object should move from it's center
+- [x] object should move from it's center
+    - changed draw() of createObject to use coords as center and calculate the top-left-coords. also had to do same in areColliding() 
 - [ ] object collision could be missed between 2 frames, if displacement between frames is greater than object size.
     - this can be solved by calculating potential object collision and calculating line intersection to see if they would collide 
 - [ ] speed should be calcuated in px/ms instead of px/frame to make it frame rate independent

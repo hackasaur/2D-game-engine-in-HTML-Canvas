@@ -3,7 +3,16 @@ import * as canvasTools from './canvas tools.js';
 function areColliding(object1, object2) {
     let colliding = false
 
-    colliding = canvasTools.areBoxesOverlapping(object2.properties.coords, object2.properties.width, object2.properties.height, object1.properties.coords, object1.properties.width, object1.properties.height)
+    let topLeftCoords1 = canvasTools.createPoint(
+        object1.properties.coords[0] - object1.properties.width / 2,
+        object1.properties.coords[1] - object1.properties.height / 2)
+
+    let topLeftCoords2 = canvasTools.createPoint(
+        object2.properties.coords[0] - object2.properties.width / 2,
+        object2.properties.coords[1] - object2.properties.height / 2)
+
+    colliding = canvasTools.areBoxesOverlapping(
+        topLeftCoords2, object2.properties.width, object2.properties.height, topLeftCoords1, object1.properties.width, object1.properties.height)
 
     // if (colliding) {
     //     console.log(object1.properties.name, ' collided with ', object2.properties.name)
@@ -55,7 +64,7 @@ const checkCollisionAndUpdate = (objects) => {
     }
 }
 
-export const createObject = (ctx, name, coords, allObjects = []) => {
+export const createObject = (ctx, name, coords) => {
     const properties = {
         name: name,
         coords: coords,
@@ -79,7 +88,7 @@ export const createObject = (ctx, name, coords, allObjects = []) => {
             ctx.shadowOffsetX = -5;
             ctx.shadowOffsetY = 5;
             ctx.beginPath(path)
-            path.rect(properties.coords[0], properties.coords[1], properties.width, properties.height)
+            path.rect(properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, properties.width, properties.height)
             ctx.fillStyle = properties.color
             ctx.fill(path)
             ctx.closePath(path)
@@ -115,14 +124,14 @@ export const createObject = (ctx, name, coords, allObjects = []) => {
                     else if (cosTheta < 0) {
                         //moving towards left
                         properties.coords = properties.coordsToReach
-                        properties.velocity = canvasTools.createPoint(0,0)
+                        properties.velocity = canvasTools.createPoint(0, 0)
                     }
                 }
 
                 else if (properties.coordsToReach[0] - (properties.coords[0] + properties.velocity[0]) <= 0) {
                     if (cosTheta >= 0) {
                         properties.coords = properties.coordsToReach
-                        properties.velocity = canvasTools.createPoint(0,0)
+                        properties.velocity = canvasTools.createPoint(0, 0)
                     }
                     else if (cosTheta < 0) {
                         properties.coords[0] += properties.velocity[0]
@@ -244,9 +253,29 @@ export const startGameLoop = (canvas, allObjects, cursors, isDebugging = false, 
         ctx.fillText("FPS: " + fps, 50, 20)
 
         //mouse coordinates
-        if (isDebugging && mouseCoords) {
-            canvasTools.setCanvasFont(ctx, { fontStyle: 'Fira Mono', fontColor: 'grey', fontSize: '15' })
-            ctx.fillText(`x:${mouseCoords[0]}, y:${mouseCoords[1]}`, mouseCoords[0], mouseCoords[1])
+        if (isDebugging) {
+            if (mouseCoords) {
+                canvasTools.setCanvasFont(ctx, { font: 'Fira Mono', color: 'grey', size: '10' })
+                ctx.fillText(`x:${mouseCoords[0]}, y:${mouseCoords[1]}`, mouseCoords[0], mouseCoords[1])
+            }
+            let vectorScale = 20
+            for (let object of allObjects) {
+                ctx.fillStyle = 'grey'
+                ctx.fillRect(object.properties.coords[0] - 1.5, object.properties.coords[1] -1.5, 3, 3)
+                ctx.lineWidth = 2
+                ctx.beginPath()
+                ctx.moveTo(object.properties.coords[0], object.properties.coords[1])
+                ctx.lineTo(object.properties.coords[0] + vectorScale * object.properties.velocity[0], object.properties.coords[1])
+                ctx.strokeStyle = 'red'
+                ctx.stroke()
+                ctx.closePath()
+                ctx.beginPath()
+                ctx.strokeStyle = 'green'
+                ctx.moveTo(object.properties.coords[0], object.properties.coords[1])
+                ctx.lineTo(object.properties.coords[0] , object.properties.coords[1] + vectorScale * object.properties.velocity[1])
+                ctx.stroke()
+                ctx.closePath()
+            }
         }
 
         frame++
