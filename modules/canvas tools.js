@@ -33,6 +33,87 @@ export const isPointInsideBox2 = (point, topLeftCoords, bottomRightCoords) => {
         point[1] <= bottomRightCoords[1])
 }
 
+
+export const areBoxesOverlapping = (topLeftCoords1, width1, height1, topLeftCoords2, width2, height2) => {
+    let topRightCoords1 = createPoint(topLeftCoords1[0] + width1, topLeftCoords1[1])
+    let bottomRightCoords1 = createPoint(topLeftCoords1[0] + width1, topLeftCoords1[1] + height1)
+    let bottomLeftCoords1 = createPoint(topLeftCoords1[0], topLeftCoords1[1] + height1)
+
+    if (isPointInsideBox(topLeftCoords1, topLeftCoords2, width2, height2) ||
+        isPointInsideBox(topRightCoords1, topLeftCoords2, width2, height2) ||
+        isPointInsideBox(bottomRightCoords1, topLeftCoords2, width2, height2) ||
+        isPointInsideBox(bottomLeftCoords1, topLeftCoords2, width2, height2)
+    ) {
+        return true
+    }
+
+    let topRightCoords2 = createPoint(topLeftCoords2[0] + width2, topLeftCoords2[1])
+    let bottomRightCoords2 = createPoint(topLeftCoords2[0] + width2, topLeftCoords2[1] + height2)
+    let bottomLeftCoords2 = createPoint(topLeftCoords2[0], topLeftCoords2[1] + height2)
+
+    if (isPointInsideBox(topLeftCoords2, topLeftCoords1, width1, height1) ||
+        isPointInsideBox(topRightCoords2, topLeftCoords1, width1, height1) ||
+        isPointInsideBox(bottomRightCoords2, topLeftCoords1, width1, height1) ||
+        isPointInsideBox(bottomLeftCoords2, topLeftCoords1, width1, height1)
+    ) {
+        return true
+    }
+    return false
+}
+
+
+export const whereTwoRectsOverlap = (topLeftCoords1, width1, height1, topLeftCoords2, width2, height2) => {
+    let topRightCoords1 = createPoint(topLeftCoords1[0] + width1, topLeftCoords1[1])
+    let bottomRightCoords1 = createPoint(topLeftCoords1[0] + width1, topLeftCoords1[1] + height1)
+    let bottomLeftCoords1 = createPoint(topLeftCoords1[0], topLeftCoords1[1] + height1)
+
+    let cornerCoords1 = [topLeftCoords1, topRightCoords1, bottomRightCoords1, bottomLeftCoords1]
+
+    for (let coord of cornerCoords1) {
+        if (isPointInsideBox(coord, topLeftCoords2, width2, height2)) {
+            return coord
+        }
+    }
+    // if (isPointInsideBox(topLeftCoords1, topLeftCoords2, width2, height2)) {
+    //     return topLeftCoords1
+    // }
+    // else if (isPointInsideBox(topRightCoords1, topLeftCoords2, width2, height2)) {
+    //     return topRightCoords1
+    // }
+    // else if (isPointInsideBox(bottomRightCoords1, topLeftCoords2, width2, height2)) {
+    //     return bottomRightCoords1
+    // }
+    // else if (isPointInsideBox(bottomLeftCoords1, topLeftCoords2, width2, height2){
+    //     return bottomLeftCoords1
+    // }
+
+    let topRightCoords2 = createPoint(topLeftCoords2[0] + width2, topLeftCoords2[1])
+    let bottomRightCoords2 = createPoint(topLeftCoords2[0] + width2, topLeftCoords2[1] + height2)
+    let bottomLeftCoords2 = createPoint(topLeftCoords2[0], topLeftCoords2[1] + height2)
+
+    let cornerCoords2 = [topLeftCoords2, topRightCoords2, bottomRightCoords2, bottomLeftCoords2]
+
+    for (let coord of cornerCoords2) {
+        if (isPointInsideBox(coord, topLeftCoords1, width1, height1)) {
+            return coord
+        }
+    }
+
+    // if (isPointInsideBox(topLeftCoords2, topLeftCoords1, width1, height1)) {
+    //     return topLeftCoords2
+    // }
+    // else if (isPointInsideBox(topRightCoords2, topLeftCoords1, width1, height1)) {
+    //     return topRightCoords2
+    // }
+    // else if (isPointInsideBox(bottomRightCoords2, topLeftCoords1, width1, height1)) {
+    //     return bottomRightCoords2
+    // }
+    // else if (isPointInsideBox(bottomLeftCoords2, topLeftCoords1, width1, height1)) {
+    //     return bottomLeftCoords2
+    // }
+    return undefined
+}
+
 export const paintBackground = (ctx, color, width, height) => {
     ctx.fillStyle = color
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)

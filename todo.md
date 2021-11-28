@@ -7,6 +7,7 @@
     - solved the bug by lazy fix, now both objects corner points are checked with respect to other
 
 # todo
+- [ ] use quadtree for collision optimization
 - [ ] object should move from it's center
 - [ ] object collision could be missed between 2 frames, if displacement between frames is greater than object size.
     - this can be solved by calculating potential object collision and calculating line intersection to see if they would collide 
@@ -25,6 +26,11 @@
 - debugging mode
 
 # notes
+**---nov---**
+should everything be a rectangle...shouldn't this also work for any n-sided polygon?
+
+i'm going to implement a 'moved-area' logic where the objects that
+
 **---oct 1---**
 collision could get skipped between 2 frames or a gap may show between objects 
 
@@ -34,4 +40,4 @@ calculate speed in px/ms so that it's frame rate independent.
 **---sept 28---**
 dumped the idea of rendering only pixels that are changing due to weird bug that contracted edges of rectangles under the cursor area.
 setInterval is good idea for slowing down frame rate for debugging.
-the idea of using corner vertices to check if ojects are colliding is nice but there's an edge case where a rectangle can pass through the middle of a wider object. the wider object will stop because isCollision() will be true for it since corner of the other object is inside it, but the narrow rectangle will not since no corner is inside it. solved the bug by lazy fix, now both objects corner points are checked with respect to other
+the idea of using corner vertices to check if ojects are colliding is nice but there's an edge case where a rectangle can pass through the middle of a wider object. the wider object will stop because isCollision() will be true for it, since corner of the other object is inside it, but the narrow rectangle will not since no corner is inside it. solved the bug by lazy fix, now both objects corner points are checked with respect to other

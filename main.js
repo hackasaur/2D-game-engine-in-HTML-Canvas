@@ -12,7 +12,7 @@ function main() {
 		// ctx.imageSmoothingEnabled = false
 		// ctx.translate(0.5, 0.5)
 
-		let isDebugging = true
+		let debug = true
 		let currentMouseCoords
 		const allObjects = []
 
@@ -26,7 +26,9 @@ function main() {
 		// create random objects
 		for (let i = 0; i < 8; i++) {
 			let obj
-			obj = gameEngine.createObject(ctx, `obj${i}`, canvasTools.createPoint(ctx.canvas.width * Math.random(), ctx.canvas.height * Math.random()))
+			obj = gameEngine.createObject(ctx, `obj${i}`,
+				canvasTools.createPoint(ctx.canvas.width * Math.random(), ctx.canvas.height * Math.random())
+			)
 			obj.properties.color = colors[Math.floor(3 * Math.random())]
 			obj.properties.width = Math.round(10 + 60 * Math.random())
 			obj.properties.height = Math.round(10 + 60 * Math.random())
@@ -46,7 +48,7 @@ function main() {
 		// 	currentMouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
 		// })
 
-		gameEngine.startGameLoop(canvas, allObjects, cursors, true)
+		gameEngine.startGameLoop(canvas, allObjects, cursors, debug)
 	}
 }
 window.addEventListener('load', main)

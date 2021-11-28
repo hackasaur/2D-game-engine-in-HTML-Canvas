@@ -1,45 +1,35 @@
 import * as canvasTools from './canvas tools.js';
 
-const areBoxesOverlapping = (topLeftCoords1, width1, height1, topLeftCoords2, width2, height2) => {
-    let topRightCoords1 = canvasTools.createPoint(topLeftCoords1[0] + width1, topLeftCoords1[1])
-    let bottomRightCoords1 = canvasTools.createPoint(topLeftCoords1[0] + width1, topLeftCoords1[1] + height1)
-    let bottomLeftCoords1 = canvasTools.createPoint(topLeftCoords1[0], topLeftCoords1[1] + height1)
+function areColliding(object1, object2) {
+    let colliding = false
 
-    if (canvasTools.isPointInsideBox(topLeftCoords1, topLeftCoords2, width2, height2) ||
-        canvasTools.isPointInsideBox(topRightCoords1, topLeftCoords2, width2, height2) ||
-        canvasTools.isPointInsideBox(bottomRightCoords1, topLeftCoords2, width2, height2) ||
-        canvasTools.isPointInsideBox(bottomLeftCoords1, topLeftCoords2, width2, height2)
-    ) {
-        return true
+    colliding = canvasTools.areBoxesOverlapping(object2.properties.coords, object2.properties.width, object2.properties.height, object1.properties.coords, object1.properties.width, object1.properties.height)
+
+    // if (colliding) {
+    //     console.log(object1.properties.name, ' collided with ', object2.properties.name)
+    // }
+    return colliding
+}
+
+function rectMovedAreaCoords(topLeftCoords1, topLeftCoords2, width, height) {
+    let topRightCoords2 = createPoint(topLeftCoords2[0] + width2, topLeftCoords2[1])
+    let bottomRightCoords2 = createPoint(topLeftCoords2[0] + width2, topLeftCoords2[1] + height2)
+    let bottomLeftCoords2 = createPoint(topLeftCoords2[0], topLeftCoords2[1] + height2)
+
+    let cornerCoords2 = [topLeftCoords2, topRightCoords2, bottomRightCoords2, bottomLeftCoords2]
+
+    for (let coord of cornerCoords2) {
+        if (isPointInsideBox(coord, topLeftCoords1, width, height)) {
+            return coord
+        }
     }
 
-    let topRightCoords2 = canvasTools.createPoint(topLeftCoords2[0] + width2, topLeftCoords2[1])
-    let bottomRightCoords2 = canvasTools.createPoint(topLeftCoords2[0] + width2, topLeftCoords2[1] + height2)
-    let bottomLeftCoords2 = canvasTools.createPoint(topLeftCoords2[0], topLeftCoords2[1] + height2)
-
-    if (canvasTools.isPointInsideBox(topLeftCoords2, topLeftCoords1, width1, height1) ||
-        canvasTools.isPointInsideBox(topRightCoords2, topLeftCoords1, width1, height1) ||
-        canvasTools.isPointInsideBox(bottomRightCoords2, topLeftCoords1, width1, height1) ||
-        canvasTools.isPointInsideBox(bottomLeftCoords2, topLeftCoords1, width1, height1)
-    ) {
-        return true
-    }
-    return false
 }
 
 const checkCollisionAndUpdate = (objects) => {
     let objectsDone = []
     let objectsColliding = []
-    function areColliding(object1, object2) {
-        let colliding = false
-
-        colliding = areBoxesOverlapping(object2.properties.coords, object2.properties.width, object2.properties.height, object1.properties.coords, object1.properties.width, object1.properties.height)
-
-        if (colliding) {
-            console.log(object1.properties.name, ' collided with ', object2.properties.name)
-        }
-        return colliding
-    }
+    let collidingObjectPairs = []
 
     for (let object1 of objects) {
         for (let object2 of objects) {
@@ -53,48 +43,33 @@ const checkCollisionAndUpdate = (objects) => {
                     break
                 }
             }
+            // if (object1 !== object2) {
+            //     if (canvasTools.whereTwoRectsOverlap(
+            //         object2.properties.coords, object2.properties.width, object2.properties.height,
+            //         object1.properties.coords, object1.properties.width, object1.properties.height)) {
+            //         collidingObjectPairs.push([object1, object2])
+            //     }
+            // }
         }
         objectsDone.push(object1)
     }
 }
 
-export const createObject = (ctx, name, initialCoords, allObjects = []) => {
+export const createObject = (ctx, name, coords, allObjects = []) => {
     const properties = {
         name: name,
-        coords: initialCoords,
+        coords: coords,
         color: 'white',
         width: 30,
         height: 60,
-        coordsToReach: initialCoords,
+        coordsToReach: coords,
         speed: 1.5,
-        inMotion: false,
-        selectable: false
+        selectable: false,
+        velocity: canvasTools.createPoint(0, 0)
     }
 
-    let slope, x0, y0, cosTheta, horizontalIncrement, prevCoords
+    let slope, cosTheta, prevCoords
     let calculated = false
-
-    function isColliding(self, allObjects) {
-        //returns true/false if the object is colliding with other objects
-        let colliding = false
-        let objectName
-        for (let object of allObjects) {
-            if (self === object) {
-                continue
-            }
-
-            if (areBoxesOverlapping(properties.coords, properties.width, properties.height, object.properties.coords, object.properties.width, object.properties.height)) {
-                colliding = true
-                objectName = object.properties.name
-                break
-            }
-        }
-
-        if (colliding) {
-            console.log('collided with: ', objectName)
-        }
-        return colliding
-    }
 
     return {
         properties,
@@ -113,18 +88,17 @@ export const createObject = (ctx, name, initialCoords, allObjects = []) => {
         },
 
         update() {
-            // if (properties.inMotion === true) {
-            prevCoords = properties.coords
+            prevCoords = canvasTools.createPoint(properties.coords[0], properties.coords[1])
+
             if (properties.coordsToReach !== properties.coords) {
                 if (calculated === false) {
                     let deltaX = properties.coordsToReach[0] - properties.coords[0]
                     let deltaY = properties.coordsToReach[1] - properties.coords[1]
-                    x0 = properties.coords[0]
-                    y0 = properties.coords[1]
                     slope = deltaY / deltaX
                     let distanceFromCoordsTillCoordsToReach = Math.sqrt(deltaX ** 2 + deltaY ** 2)
                     cosTheta = deltaX / distanceFromCoordsTillCoordsToReach
-                    horizontalIncrement = properties.speed * cosTheta
+                    let horizontalIncrement = properties.speed * cosTheta
+                    properties.velocity = canvasTools.createPoint(horizontalIncrement, slope * horizontalIncrement)
                     calculated = true
                 }
 
@@ -132,33 +106,30 @@ export const createObject = (ctx, name, initialCoords, allObjects = []) => {
                 /* we can simply add a shift in the coords along the slope but the destination point will get missed and the object 
                 will not stop  at that point...to avoid this, in the case when the horizontal shift will go ahead of the destination 
                 point it will move the object to the destination directly and stop. */
-                if (properties.coordsToReach[0] - (properties.coords[0] + horizontalIncrement) > 0) {
+                if (properties.coordsToReach[0] - (properties.coords[0] + properties.velocity[0]) > 0) {
                     if (cosTheta >= 0) {
                         //moving towards right
-                        properties.coords = canvasTools.createPoint(
-                            properties.coords[0] + horizontalIncrement,
-                            slope * (properties.coords[0] - x0) + y0
-                        )
+                        properties.coords[0] += properties.velocity[0]
+                        properties.coords[1] += properties.velocity[1]
                     }
                     else if (cosTheta < 0) {
                         //moving towards left
                         properties.coords = properties.coordsToReach
-                        properties.inMotion = false
+                        properties.velocity = canvasTools.createPoint(0,0)
                     }
                 }
 
-                else if (properties.coordsToReach[0] - (properties.coords[0] + horizontalIncrement) <= 0) {
+                else if (properties.coordsToReach[0] - (properties.coords[0] + properties.velocity[0]) <= 0) {
                     if (cosTheta >= 0) {
                         properties.coords = properties.coordsToReach
-                        properties.inMotion = false
+                        properties.velocity = canvasTools.createPoint(0,0)
                     }
                     else if (cosTheta < 0) {
-                        properties.coords = canvasTools.createPoint(
-                            properties.coords[0] + horizontalIncrement,
-                            slope * (properties.coords[0] - x0) + y0
-                        )
+                        properties.coords[0] += properties.velocity[0]
+                        properties.coords[1] += properties.velocity[1]
                     }
                 }
+                // console.log(`coords: ${properties.coords} prevCoords: ${prevCoords}`)
             }
 
             // if (isColliding(this, allObjects)) {
@@ -169,7 +140,6 @@ export const createObject = (ctx, name, initialCoords, allObjects = []) => {
         moveTo(coords) {
             properties.coordsToReach = coords
             calculated = false
-            properties.inMotion = true
         },
 
         undoUpdate() {
@@ -256,8 +226,8 @@ export const startGameLoop = (canvas, allObjects, cursors, isDebugging = false, 
     })
 
     function gameLoop(timeStamp) {
-        canvasTools.paintBackground(ctx, '#353347')
         code()
+        canvasTools.paintBackground(ctx, '#353347')
         updateAndPaintScene(allObjects, cursors)
 
         //FPS
@@ -266,6 +236,7 @@ export const startGameLoop = (canvas, allObjects, cursors, isDebugging = false, 
         oldTimeStamp = timeStamp
         // Calculate fps
         fps = Math.round(1 / secondsPassed);
+
         //show fps
         ctx.shadowColor = 'rgba(0, 0, 0, 0)'
         ctx.fillStyle = 'black'
