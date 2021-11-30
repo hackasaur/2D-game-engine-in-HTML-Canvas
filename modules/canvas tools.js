@@ -33,7 +33,6 @@ export const isPointInsideBox2 = (point, topLeftCoords, bottomRightCoords) => {
         point[1] <= bottomRightCoords[1])
 }
 
-
 export const areBoxesOverlapping = (topLeftCoords1, width1, height1, topLeftCoords2, width2, height2) => {
     let topRightCoords1 = createPoint(topLeftCoords1[0] + width1, topLeftCoords1[1])
     let bottomRightCoords1 = createPoint(topLeftCoords1[0] + width1, topLeftCoords1[1] + height1)
@@ -117,4 +116,17 @@ export const whereTwoRectsOverlap = (topLeftCoords1, width1, height1, topLeftCoo
 export const paintBackground = (ctx, color, width, height) => {
     ctx.fillStyle = color
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+}
+
+export const distanceBetweenPoints = (coords1, coords2) => {
+    let deltaX = coords2[0] - coords1[0]
+    let deltaY = coords2[1] - coords1[1]
+    // slope = deltaY / deltaX
+    return Math.sqrt(deltaX ** 2 + deltaY ** 2)
+}
+
+export const getSlope2Points = (coords1, coords2) => {
+    let deltaX = coords2[0] - coords1[0]
+    let deltaY = coords2[1] - coords1[1]
+    return deltaY/deltaX
 }

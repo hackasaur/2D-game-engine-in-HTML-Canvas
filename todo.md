@@ -7,8 +7,8 @@
     - solved the bug by lazy fix, now both objects corner points are checked with respect to other
 
 # todo
+- [ ] gravity
 - [ ] use quadtree for collision optimization
-- [x] object should move from it's center
     - changed draw() of createObject to use coords as center and calculate the top-left-coords. also had to do same in areColliding() 
 - [ ] object collision could be missed between 2 frames, if displacement between frames is greater than object size.
     - this can be solved by calculating potential object collision and calculating line intersection to see if they would collide 
@@ -18,6 +18,10 @@
 - can ctx argumment be removed from createObject etc. functions? a universal draw() could be seperated from these functions? 
     - the createObject()'s object will just return the coords and object-shape?? and then the universalDraw() will draw on canvas
     - this way the functions will also be HTML canvas independent
+- [ ] multiple lightsources. find a better formula for shadow offset 
+- [x] point light source for rects using shadowOffset
+- [x] show object velocity vectors x and y in debugging
+- [x] object should move from it's center
 - [x] instead of getProperties() return properties so that it can be accessed as e.g. obj1.properties.coords
 - [x] make a seperate game engine module
 
@@ -28,6 +32,8 @@
 
 # notes
 **---nov---**
+implemented shadow for a a light source for rectangles looks pretty cool!
+
 should everything be a rectangle...shouldn't this also work for any n-sided polygon?
 
 i'm going to implement a 'moved-area' logic where the objects that

@@ -17,17 +17,29 @@ function main() {
 		const allObjects = []
 
 		let heroInitialCoords = canvasTools.createPoint(100, 100)
-		const theHero = gameEngine.createObject(ctx, 'hero', heroInitialCoords, allObjects)
+		const theHero = gameEngine.createObject(ctx, 'hero', heroInitialCoords)
 		// const theHero2 = gameEngine.createObject(ctx, 'hero2', canvasTools.createPoint(200, 200), allObjects)
 		allObjects.push(theHero)
 		// allObjects.push(theHero2)
 
 		let colors = ['blue', 'yellow', 'orange', 'grey']
 		// create random objects
+		// for (let i = 0; i < 8; i++) {
+		// 	let obj
+		// 	obj = gameEngine.createObject(ctx, `obj${i}`,
+		// 		canvasTools.createPoint(ctx.canvas.width * Math.random(), ctx.canvas.height * Math.random())
+		// 	)
+		// 	obj.properties.color = colors[Math.floor(3 * Math.random())]
+		// 	obj.properties.width = Math.round(10 + 60 * Math.random())
+		// 	obj.properties.height = Math.round(10 + 60 * Math.random())
+		// 	allObjects.push(obj)
+		// }
+
 		for (let i = 0; i < 8; i++) {
 			let obj
+			let radius = 250
 			obj = gameEngine.createObject(ctx, `obj${i}`,
-				canvasTools.createPoint(ctx.canvas.width * Math.random(), ctx.canvas.height * Math.random())
+				canvasTools.createPoint(radius * Math.sin(2*Math.PI/8 * i) + 400 , radius *  Math.cos(2*Math.PI/8 * i) + 300)
 			)
 			obj.properties.color = colors[Math.floor(3 * Math.random())]
 			obj.properties.width = Math.round(10 + 60 * Math.random())
@@ -35,11 +47,13 @@ function main() {
 			allObjects.push(obj)
 		}
 
+		let light = gameEngine.createObject(ctx, 'light', canvasTools.createPoint(500,100))
 		const cursors = []
 
 		canvas.addEventListener('click', (event) => {
 			let mouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
-			theHero.moveTo(mouseCoords)
+			// theHero.moveTo(mouseCoords)
+			light.moveTo(mouseCoords)
 			// theHero2.moveTo(mouseCoords)
 			// cursors.push(gameEngine.spawnMoveHereCursor(ctx, mouseCoords, 'GreenYellow'))
 		})
@@ -48,7 +62,7 @@ function main() {
 		// 	currentMouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
 		// })
 
-		gameEngine.startGameLoop(canvas, allObjects, cursors, debug)
+		gameEngine.startGameLoop(canvas, allObjects, cursors, light, debug)
 	}
 }
 window.addEventListener('load', main)

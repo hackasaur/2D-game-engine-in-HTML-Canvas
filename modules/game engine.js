@@ -20,19 +20,13 @@ function areColliding(object1, object2) {
     return colliding
 }
 
-function rectMovedAreaCoords(topLeftCoords1, topLeftCoords2, width, height) {
-    let topRightCoords2 = createPoint(topLeftCoords2[0] + width2, topLeftCoords2[1])
-    let bottomRightCoords2 = createPoint(topLeftCoords2[0] + width2, topLeftCoords2[1] + height2)
-    let bottomLeftCoords2 = createPoint(topLeftCoords2[0], topLeftCoords2[1] + height2)
-
-    let cornerCoords2 = [topLeftCoords2, topRightCoords2, bottomRightCoords2, bottomLeftCoords2]
-
-    for (let coord of cornerCoords2) {
-        if (isPointInsideBox(coord, topLeftCoords1, width, height)) {
-            return coord
-        }
-    }
-
+const shadowOffsetForObject = (object, lightSource) => {
+    let deltaX = object.properties.coords[0] - lightSource.properties.coords[0]
+    let deltaY = object.properties.coords[1] - lightSource.properties.coords[1]
+    let distance = Math.sqrt(deltaX ** 2 + deltaY ** 2)
+    let shadowOffsetX = deltaX / (0.05*distance)
+    let shadowOffsetY = deltaY / (0.05*distance)
+    return canvasTools.createPoint(shadowOffsetX, shadowOffsetY)
 }
 
 const checkCollisionAndUpdate = (objects) => {
@@ -64,6 +58,7 @@ const checkCollisionAndUpdate = (objects) => {
     }
 }
 
+
 export const createObject = (ctx, name, coords) => {
     const properties = {
         name: name,
@@ -74,7 +69,8 @@ export const createObject = (ctx, name, coords) => {
         coordsToReach: coords,
         speed: 1.5,
         selectable: false,
-        velocity: canvasTools.createPoint(0, 0)
+        velocity: canvasTools.createPoint(0, 0),
+        shadowOffset: canvasTools.createPoint(0, 0)
     }
 
     let slope, cosTheta, prevCoords
@@ -85,8 +81,8 @@ export const createObject = (ctx, name, coords) => {
         draw() {
             let path = new Path2D
             ctx.shadowColor = 'rgba(0, 0, 0, 0.3)'
-            ctx.shadowOffsetX = -5;
-            ctx.shadowOffsetY = 5;
+            ctx.shadowOffsetX = properties.shadowOffset[0];
+            ctx.shadowOffsetY = properties.shadowOffset[1];
             ctx.beginPath(path)
             path.rect(properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, properties.width, properties.height)
             ctx.fillStyle = properties.color
@@ -138,7 +134,6 @@ export const createObject = (ctx, name, coords) => {
                         properties.coords[1] += properties.velocity[1]
                     }
                 }
-                // console.log(`coords: ${properties.coords} prevCoords: ${prevCoords}`)
             }
 
             // if (isColliding(this, allObjects)) {
@@ -192,7 +187,11 @@ export const spawnMoveHereCursor = (ctx, coords, color) => {
     }
 }
 
-export const updateAndPaintScene = (sceneObjects, sceneCursors) => {
+export const updateAndPaintScene = (sceneObjects, sceneCursors, lightSource) => {
+    // console.log('light', lightSource)
+    lightSource.update()
+    lightSource.draw()
+
     sceneObjects.forEach((obj) => {
         obj.update()
     })
@@ -200,6 +199,7 @@ export const updateAndPaintScene = (sceneObjects, sceneCursors) => {
     checkCollisionAndUpdate(sceneObjects)
 
     sceneObjects.forEach((obj) => {
+        obj.properties.shadowOffset = shadowOffsetForObject(obj, lightSource)
         obj.draw()
     })
 
@@ -215,9 +215,9 @@ export const updateAndPaintScene = (sceneObjects, sceneCursors) => {
     }
 }
 
-export const startGameLoop = (canvas, allObjects, cursors, isDebugging = false, code = () => { return 0 }) => {
+export const startGameLoop = (canvas, allObjects, cursors, lightSource, isDebugging = false, code = () => { return 0 }) => {
     //allObjects is a array containing all the objects of the scene. 
-    //cursors is a array used to store the all the current moveHereCursors
+    //cursors is a array used to store all the current moveHereCursors
     let mouseCoords
     let secondsPassed
     let oldTimeStamp
@@ -237,7 +237,7 @@ export const startGameLoop = (canvas, allObjects, cursors, isDebugging = false, 
     function gameLoop(timeStamp) {
         code()
         canvasTools.paintBackground(ctx, '#353347')
-        updateAndPaintScene(allObjects, cursors)
+        updateAndPaintScene(allObjects, cursors, lightSource)
 
         //FPS
         // Calculate the number of seconds passed since the last frame
@@ -247,7 +247,7 @@ export const startGameLoop = (canvas, allObjects, cursors, isDebugging = false, 
         fps = Math.round(1 / secondsPassed);
 
         //show fps
-        ctx.shadowColor = 'rgba(0, 0, 0, 0)'
+        // ctx.shadowColor = 'rgba(0, 0, 0, 0)'
         ctx.fillStyle = 'black'
         canvasTools.setCanvasFont(ctx, { font: 'Arial', size: '25px', color: 'white' })
         ctx.fillText("FPS: " + fps, 50, 20)
@@ -261,18 +261,21 @@ export const startGameLoop = (canvas, allObjects, cursors, isDebugging = false, 
             let vectorScale = 20
             for (let object of allObjects) {
                 ctx.fillStyle = 'grey'
-                ctx.fillRect(object.properties.coords[0] - 1.5, object.properties.coords[1] -1.5, 3, 3)
+                //center of rectangle
+                ctx.fillRect(object.properties.coords[0] - 1.5, object.properties.coords[1] - 1.5, 3, 3)
                 ctx.lineWidth = 2
+                //vectorX
                 ctx.beginPath()
                 ctx.moveTo(object.properties.coords[0], object.properties.coords[1])
                 ctx.lineTo(object.properties.coords[0] + vectorScale * object.properties.velocity[0], object.properties.coords[1])
                 ctx.strokeStyle = 'red'
                 ctx.stroke()
                 ctx.closePath()
+                //vectorY
                 ctx.beginPath()
                 ctx.strokeStyle = 'green'
                 ctx.moveTo(object.properties.coords[0], object.properties.coords[1])
-                ctx.lineTo(object.properties.coords[0] , object.properties.coords[1] + vectorScale * object.properties.velocity[1])
+                ctx.lineTo(object.properties.coords[0], object.properties.coords[1] + vectorScale * object.properties.velocity[1])
                 ctx.stroke()
                 ctx.closePath()
             }
@@ -286,4 +289,5 @@ export const startGameLoop = (canvas, allObjects, cursors, isDebugging = false, 
         }
     }
     gameLoop()
+    // setInterval(gameLoop, 1000)
 }
