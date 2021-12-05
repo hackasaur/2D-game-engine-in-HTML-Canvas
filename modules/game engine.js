@@ -58,7 +58,6 @@ const checkCollisionAndUpdate = (objects) => {
     }
 }
 
-
 export const createObject = (ctx, name, coords) => {
     const properties = {
         name: name,

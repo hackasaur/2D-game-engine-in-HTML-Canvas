@@ -23,17 +23,6 @@ function main() {
 		// allObjects.push(theHero2)
 
 		let colors = ['blue', 'yellow', 'orange', 'grey']
-		// create random objects
-		// for (let i = 0; i < 8; i++) {
-		// 	let obj
-		// 	obj = gameEngine.createObject(ctx, `obj${i}`,
-		// 		canvasTools.createPoint(ctx.canvas.width * Math.random(), ctx.canvas.height * Math.random())
-		// 	)
-		// 	obj.properties.color = colors[Math.floor(3 * Math.random())]
-		// 	obj.properties.width = Math.round(10 + 60 * Math.random())
-		// 	obj.properties.height = Math.round(10 + 60 * Math.random())
-		// 	allObjects.push(obj)
-		// }
 
 		for (let i = 0; i < 8; i++) {
 			let obj
@@ -47,7 +36,10 @@ function main() {
 			allObjects.push(obj)
 		}
 
-		let light = gameEngine.createObject(ctx, 'light', canvasTools.createPoint(500,100))
+		let light = gameEngine.createObject(ctx, 'point-light', canvasTools.createPoint(500,100))
+		light.properties.width = 20
+		light.properties.height = 20
+
 		const cursors = []
 
 		canvas.addEventListener('click', (event) => {
