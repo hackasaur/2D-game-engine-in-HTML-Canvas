@@ -7,8 +7,8 @@ function main() {
 		let yPadding = 140
 		let xPadding = 300
 		const ctx = canvas.getContext('2d')
-		ctx.canvas.width = window.innerWidth - xPadding
-		ctx.canvas.height = window.innerHeight - yPadding
+		ctx.canvas.width = window.screen.width - xPadding
+		ctx.canvas.height = window.screen.height - yPadding
 		// ctx.imageSmoothingEnabled = false
 		// ctx.translate(0.5, 0.5)
 
@@ -44,8 +44,8 @@ function main() {
 
 		canvas.addEventListener('click', (event) => {
 			let mouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
-			// theHero.moveTo(mouseCoords)
-			light.moveTo(mouseCoords)
+			theHero.moveTo(mouseCoords, 1.5)
+			light.moveTo(mouseCoords, 1.5)
 			// theHero2.moveTo(mouseCoords)
 			// cursors.push(gameEngine.spawnMoveHereCursor(ctx, mouseCoords, 'GreenYellow'))
 		})

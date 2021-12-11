@@ -19,10 +19,10 @@ export const getCharacterWidth = (ctx, character) => {
 
 export const isPointInsideBox = (point, topLeftCoords, width, height) => {
     return (
-        point[0] >= topLeftCoords[0] &&
-        point[0] <= topLeftCoords[0] + width &&
-        point[1] >= topLeftCoords[1] &&
-        point[1] <= topLeftCoords[1] + height)
+        point[0] > topLeftCoords[0] &&
+        point[0] < topLeftCoords[0] + width &&
+        point[1] > topLeftCoords[1] &&
+        point[1] < topLeftCoords[1] + height)
 }
 
 export const isPointInsideBox2 = (point, topLeftCoords, bottomRightCoords) => {
