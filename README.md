@@ -10,6 +10,8 @@ these are the basic features i hope to achieve:
 
 ![screenshot 2D game engine in HTML Canvas](https://github.com/hackasaur/2D-game-engine-in-HTML-Canvas/blob/master/2D%20game%20engine%20in%20HTML%20Canvas.png)
 
+you can try it out [here](https://hackasaur.github.io/2D-game-engine-in-HTML-Canvas/)
+
 code's flow diagram for understanding the code at a glance:
 
 ![code's flow diagram svg](https://github.com/hackasaur/2D-game-engine-in-HTML-Canvas/blob/master/flow%20diagram.svg)
