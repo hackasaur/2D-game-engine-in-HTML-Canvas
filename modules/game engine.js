@@ -8,7 +8,7 @@ export const createObject = (ctx, name, coords) => {
         width: 30,
         height: 60,
         coordsToReach: canvasTools.createPoint(coords[0], coords[1]),
-        speed: 1.5,
+        speed: 0,
         selectable: false,
         velocity: canvasTools.createPoint(0, 0), //unit vector
         shadowOffset: canvasTools.createPoint(0, 0)
@@ -62,7 +62,7 @@ export const createObject = (ctx, name, coords) => {
                     }
                     else if (cosTheta < 0) {
                         //moving towards left and coordsToReach will have passed to the right
-                        properties.coords = canvasTools.createPoint(properties.coordsToReach[0], properties.coordsToReach[0])
+                        properties.coords = canvasTools.createPoint(properties.coordsToReach[0], properties.coordsToReach[1])
                         properties.velocity = canvasTools.createPoint(0, 0)
                     }
                 }
@@ -70,7 +70,7 @@ export const createObject = (ctx, name, coords) => {
                 else if (properties.coordsToReach[0] - (properties.coords[0] + properties.speed * properties.velocity[0]) <= 0) {
                     if (cosTheta >= 0) {
                         //moving towards right and the coordsToReach will have passed to the left
-                        properties.coords = properties.coordsToReach
+                        properties.coords = canvasTools.createPoint(properties.coordsToReach[0], properties.coordsToReach[1])
                         properties.velocity = canvasTools.createPoint(0, 0)
                     }
                     else if (cosTheta < 0) {
@@ -80,10 +80,6 @@ export const createObject = (ctx, name, coords) => {
                     }
                 }
             }
-
-            // if (isColliding(this, allObjects)) {
-            //     properties.coords = prevCoords
-            // }
         },
 
         moveTo(coords, speed) {
@@ -123,6 +119,7 @@ function areColliding(object1, object2) {
 function coordsAtCollision(object1, object2) {
     let object1Coords, object2Coords
 
+    //timeOfCollisionFor2Rects = (X1 - X2 +- (l1 + l2)/2) / (Vx2 - Vx1) --symmetric for y
     let timeOfHorizontalCollision = Math.min(
         (object1.properties.coords[0] - object2.properties.coords[0]
             + (object1.properties.width + object2.properties.width) / 2) / (object2.properties.velocity[0] - object1.properties.velocity[0]),
@@ -166,7 +163,7 @@ function coordsAtCollision(object1, object2) {
     return [object1Coords, object2Coords]
 }
 
-const checkCollisionAndUpdate = (objects) => {
+const collidingObjectPairs = (objects) => {
     let objectsDone = []
     let objectsColliding = []
     let collidingObjectPairs = []
@@ -176,31 +173,38 @@ const checkCollisionAndUpdate = (objects) => {
             if (objectsDone.includes(object2) || object1 === object2) {
                 continue
             }
-            else {
-                if (areColliding(object1, object2)) {
-                    object1.undoUpdate()
-                    object2.undoUpdate()
-                    let coordsWhenCollide = coordsAtCollision(object1, object2)
-                    console.log(coordsWhenCollide)
-                    object1.properties.coords = coordsWhenCollide[0]
-                    object2.properties.coords = coordsWhenCollide[1]
-                    object1.properties.speed = 0
-                    object2.properties.speed = 0
-
-                    // object1.undoUpdate()
-                    // object2.undoUpdate()
-                    break
-                }
+            else if (areColliding(object1, object2)) {
+                //     //     object1.undoUpdate()
+                //     //     object2.undoUpdate()
+                //     //     let coordsWhenCollide = coordsAtCollision(object1, object2)
+                //     //     console.log(coordsWhenCollide)
+                //     //     object1.properties.coords = coordsWhenCollide[0]
+                //     //     object2.properties.coords = coordsWhenCollide[1]
+                //     //     object1.properties.speed = 0
+                //     //     object2.properties.speed = 0
+                //     //     break
+                //     // }
+                // }
+                collidingObjectPairs.push([object1, object2])
             }
-            // if (object1 !== object2) {
-            //     if (canvasTools.whereTwoRectsOverlap(
-            //         object2.properties.coords, object2.properties.width, object2.properties.height,
-            //         object1.properties.coords, object1.properties.width, object1.properties.height)) {
-            //         collidingObjectPairs.push([object1, object2])
-            //     }
-            // }
         }
         objectsDone.push(object1)
+    }
+    return collidingObjectPairs
+}
+
+const updateCollidingObjectPairs = (collidingObjectPairs) => {
+    for (let pair of collidingObjectPairs) {
+        let object1 = pair[0]
+        let object2 = pair[1]
+        object1.undoUpdate()
+        object2.undoUpdate()
+        let coordsWhenCollide = coordsAtCollision(object1, object2)
+        console.log(coordsWhenCollide)
+        object1.properties.coords = coordsWhenCollide[0]
+        object2.properties.coords = coordsWhenCollide[1]
+        object1.properties.speed = 0
+        object2.properties.speed = 0
     }
 }
 
@@ -231,36 +235,47 @@ export const spawnMoveHereCursor = (ctx, coords, color) => {
             if (properties.isAnimating) {
                 let path = new Path2D
 
-                if (animationRadius > 0) {
-                    ctx.beginPath(path)
-                    path.arc(properties.coords[0], properties.coords[1], animationRadius, 0, 2 * Math.PI)
-                    path.lineWidth = properties.lineWidth
-                    ctx.closePath(path)
-                    ctx.strokeStyle = color
-                    ctx.stroke(path)
-                    animationRadius -= properties.speed
-                }
-                else if (animationRadius <= 0) {
-                    properties.isAnimating = false
-                }
+                ctx.beginPath(path)
+                path.arc(properties.coords[0], properties.coords[1], animationRadius, 0, 2 * Math.PI)
+                path.lineWidth = properties.lineWidth
+                ctx.closePath(path)
+                ctx.strokeStyle = color
+                ctx.stroke(path)
             }
         },
+        update: () => {
+            if (animationRadius > 0) {
+                animationRadius -= properties.speed
+            }
+            else if (animationRadius <= 0) {
+                properties.isAnimating = false
+            }
+        }
     }
 }
 
-export const updateAndPaintScene = (sceneObjects, sceneCursors, lightSource) => {
-    // console.log('light', lightSource)
+export const updateScene = (sceneObjects, sceneCursors, lightSource) => {
     lightSource.update()
-    lightSource.draw()
 
     sceneObjects.forEach((obj) => {
         obj.update()
     })
 
-    checkCollisionAndUpdate(sceneObjects)
+    updateCollidingObjectPairs(collidingObjectPairs(sceneObjects))
 
     sceneObjects.forEach((obj) => {
         obj.properties.shadowOffset = shadowOffsetForObject(obj, lightSource)
+    })
+
+    sceneCursors.forEach((cursor) => {
+        cursor.update()
+    })
+}
+
+export const paintScene = (sceneObjects, sceneCursors, lightSource) => {
+    lightSource.draw()
+
+    sceneObjects.forEach((obj) => {
         obj.draw()
     })
 
@@ -285,6 +300,7 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, isDebugg
     let fps;
     let frame = 1
     let ctx = canvas.getContext('2d')
+    let running = true
 
     canvas.addEventListener('click', (event) => {
         mouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
@@ -295,60 +311,74 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, isDebugg
         mouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
     })
 
+
+    window.addEventListener('keydown', (event) => {
+        let keyPressed = event.key
+        if (keyPressed === 'Escape') {
+            running = false
+        }
+    })
+
     function gameLoop(timeStamp) {
         code()
-        canvasTools.paintBackground(ctx, '#353347')
-        updateAndPaintScene(allObjects, cursors, lightSource)
 
-        //FPS
-        // Calculate the number of seconds passed since the last frame
-        secondsPassed = (timeStamp - oldTimeStamp) / 1000;
-        oldTimeStamp = timeStamp
-        // Calculate fps
-        fps = Math.round(1 / secondsPassed);
+        if (running) {
+            canvasTools.paintBackground(ctx, '#353347')
+            updateScene(allObjects, cursors, lightSource)
+            paintScene(allObjects, cursors, lightSource)
 
-        //show fps
-        // ctx.shadowColor = 'rgba(0, 0, 0, 0)'
-        ctx.fillStyle = 'black'
-        canvasTools.setCanvasFont(ctx, { font: 'Arial', size: '25px', color: 'white' })
-        ctx.fillText("FPS: " + fps, 50, 20)
+            //FPS
+            // Calculate the number of seconds passed since the last frame
+            secondsPassed = (timeStamp - oldTimeStamp) / 1000;
+            oldTimeStamp = timeStamp
+            // Calculate fps
+            fps = Math.round(1 / secondsPassed);
 
-        //mouse coordinates
-        if (isDebugging) {
-            if (mouseCoords) {
-                canvasTools.setCanvasFont(ctx, { font: 'Fira Mono', color: 'grey', size: '10' })
-                ctx.fillText(`x:${mouseCoords[0]}, y:${mouseCoords[1]}`, mouseCoords[0], mouseCoords[1])
-            }
-            let vectorScale = 20
-            for (let object of allObjects) {
-                ctx.fillStyle = 'grey'
-                //center of rectangle
-                ctx.fillRect(object.properties.coords[0] - 1.5, object.properties.coords[1] - 1.5, 3, 3)
-                ctx.lineWidth = 2
-                //vectorX
-                ctx.beginPath()
-                ctx.moveTo(object.properties.coords[0], object.properties.coords[1])
-                ctx.lineTo(object.properties.coords[0] + vectorScale * object.properties.velocity[0], object.properties.coords[1])
-                ctx.strokeStyle = 'red'
-                ctx.stroke()
-                ctx.closePath()
-                //vectorY
-                ctx.beginPath()
-                ctx.strokeStyle = 'green'
-                ctx.moveTo(object.properties.coords[0], object.properties.coords[1])
-                ctx.lineTo(object.properties.coords[0], object.properties.coords[1] + vectorScale * object.properties.velocity[1])
-                ctx.stroke()
-                ctx.closePath()
+            //show fps
+            ctx.fillStyle = 'black'
+            canvasTools.setCanvasFont(ctx, { font: 'Arial', size: '25px', color: 'white' })
+            ctx.fillText("FPS: " + fps, 50, 20)
+
+            if (isDebugging) {
+                if (mouseCoords) {
+                    canvasTools.setCanvasFont(ctx, { font: 'Fira Mono', color: 'black', size: '10' })
+                    ctx.fillText(`x:${mouseCoords[0]}, y:${mouseCoords[1]}`, mouseCoords[0], mouseCoords[1])
+                }
+                let vectorScale = 20
+                for (let object of allObjects) {
+                    ctx.fillStyle = 'grey'
+                    //center of rectangle
+                    ctx.fillRect(object.properties.coords[0] - 1.5, object.properties.coords[1] - 1.5, 3, 3)
+                    ctx.lineWidth = 2
+                    //vectorX
+                    ctx.beginPath()
+                    ctx.moveTo(object.properties.coords[0], object.properties.coords[1])
+                    ctx.lineTo(object.properties.coords[0] + vectorScale * object.properties.velocity[0], object.properties.coords[1])
+                    ctx.strokeStyle = 'red'
+                    ctx.stroke()
+                    ctx.closePath()
+                    //vectorY
+                    ctx.beginPath()
+                    ctx.strokeStyle = 'green'
+                    ctx.moveTo(object.properties.coords[0], object.properties.coords[1])
+                    ctx.lineTo(object.properties.coords[0], object.properties.coords[1] + vectorScale * object.properties.velocity[1])
+                    ctx.stroke()
+                    ctx.closePath()
+                    canvasTools.setCanvasFont(ctx, { font: 'Fira Mono', color: 'black', size: '10' })
+                    ctx.fillText(`${object.properties.speed}`, object.properties.coords[0], object.properties.coords[1])
+
+                    // if (object.properties.name === 'hero' || object.properties.name === 'point-light') {
+                    //     console.log(object)
+                    // }
+                }
             }
         }
-
         frame++
-        console.log('frame #')
-
+        // console.log('frame #')
         if (frame <= 5000) {
             window.requestAnimationFrame(gameLoop)
         }
     }
     gameLoop()
-    // setInterval(gameLoop, 1000)
+    // setInterval(gameLoop, 100)
 }

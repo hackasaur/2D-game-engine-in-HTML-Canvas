@@ -7,8 +7,8 @@ function main() {
 		let yPadding = 140
 		let xPadding = 300
 		const ctx = canvas.getContext('2d')
-		ctx.canvas.width = window.screen.width - xPadding
-		ctx.canvas.height = window.screen.height - yPadding
+		canvas.width = window.screen.width - xPadding
+		canvas.height = window.screen.height - yPadding
 		// ctx.imageSmoothingEnabled = false
 		// ctx.translate(0.5, 0.5)
 
@@ -26,13 +26,13 @@ function main() {
 
 		for (let i = 0; i < 8; i++) {
 			let obj
-			let radius = 250
+			let radius = 400
 			obj = gameEngine.createObject(ctx, `obj${i}`,
-				canvasTools.createPoint(radius * Math.sin(2*Math.PI/8 * i) + 400 , radius *  Math.cos(2*Math.PI/8 * i) + 300)
+				canvasTools.createPoint(radius * Math.sin(2*Math.PI/8 * i) + canvas.width/2 , radius *  Math.cos(2*Math.PI/8 * i) + canvas.height/2)
 			)
 			obj.properties.color = colors[Math.floor(3 * Math.random())]
-			obj.properties.width = Math.round(10 + 60 * Math.random())
-			obj.properties.height = Math.round(10 + 60 * Math.random())
+			obj.properties.width = Math.round(10 + 100 * Math.random())
+			obj.properties.height = Math.round(10 + 100 * Math.random())
 			allObjects.push(obj)
 		}
 
@@ -45,7 +45,7 @@ function main() {
 		canvas.addEventListener('click', (event) => {
 			let mouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
 			theHero.moveTo(mouseCoords, 1.5)
-			light.moveTo(mouseCoords, 1.5)
+			light.moveTo(mouseCoords, 1)
 			// theHero2.moveTo(mouseCoords)
 			// cursors.push(gameEngine.spawnMoveHereCursor(ctx, mouseCoords, 'GreenYellow'))
 		})

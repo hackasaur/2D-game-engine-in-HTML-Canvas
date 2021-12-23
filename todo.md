@@ -1,12 +1,17 @@
 # bugs
+- [x] hard to reproduce but object jumps to some other spot after stopping sometimes and speed increases too. 
+    - typo wrote coords[0] instead of coords[1] in object update
 - [ ] controlled objects stick together and don't move after colliding
 - [ ] move here cursor doesn't look sharp
-- [ ] weird vibrations when moving objects collide
-    - collisions should be calculated after updates and collision in between 2 frames should be considered  
+- [x] weird vibrations when moving objects collide
+    - collisions should be calculated after updates and collision in between 2 frames should be considered 
+    - coordinates at collision is calculated using a formula
 - [x] object passes through middle of objects horizontally bigger than self *-sept 28 19:30*
     - solved the bug by lazy fix, now both objects corner points are checked with respect to other
 
 # todo
+- ad frame rate contro for debugging
+- [ ] add collision detection for circle bounding box
 - [ ] collision-detection should be an event for which collision-resolution logic can be given  
 - [ ] gravity
 - [ ] collision physics
