@@ -1,6 +1,6 @@
 # bugs
 - [x] hard to reproduce but object jumps to some other spot after stopping sometimes and speed increases too. 
-    - typo wrote coords[0] instead of coords[1] in object update
+    - typo wrote coords[0] instead of coords[1] in object update. and coordsToReach reference was used instead of value
 - [ ] controlled objects stick together and don't move after colliding
 - [ ] move here cursor doesn't look sharp
 - [x] weird vibrations when moving objects collide
@@ -10,7 +10,8 @@
     - solved the bug by lazy fix, now both objects corner points are checked with respect to other
 
 # todo
-- ad frame rate contro for debugging
+- [ ] import image texture
+- [ ] add frame rate control for debugging
 - [ ] add collision detection for circle bounding box
 - [ ] collision-detection should be an event for which collision-resolution logic can be given  
 - [ ] gravity
