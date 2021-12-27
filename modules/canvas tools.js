@@ -1,6 +1,5 @@
 export const createPoint = (x, y) => {
-    let point = new Int8Array(2)
-    point = [x, y]
+    let point = [x,y]
     return point
 }
 

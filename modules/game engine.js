@@ -37,7 +37,7 @@ export const createObject = (ctx, name, coords) => {
             prevCoords = canvasTools.createPoint(properties.coords[0], properties.coords[1])
 
             if (properties.coordsToReach[0] !== properties.coords[0]
-                && properties.coordsToReach[1] !== properties.coords[1]) {
+                || properties.coordsToReach[1] !== properties.coords[1]) {
                 if (calculated === false) {
                     let deltaX = properties.coordsToReach[0] - properties.coords[0]
                     let deltaY = properties.coordsToReach[1] - properties.coords[1]
