@@ -16,11 +16,14 @@ function main() {
 		let currentMouseCoords
 		const allObjects = []
 
+		let sprite = new Image()
+		sprite.src = "img/mario_sprite.png"	
+
 		let heroInitialCoords = canvasTools.createPoint(100, 100)
-		const theHero = gameEngine.createObject(ctx, 'hero', heroInitialCoords)
+		const theHero = gameEngine.createObject(ctx, 'hero', heroInitialCoords, sprite)
+		theHero.properties.height = 30
 		// const theHero2 = gameEngine.createObject(ctx, 'hero2', canvasTools.createPoint(200, 200), allObjects)
 		allObjects.push(theHero)
-		// allObjects.push(theHero2)
 
 		let colors = ['blue', 'yellow', 'orange', 'grey']
 
@@ -46,13 +49,8 @@ function main() {
 			let mouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
 			theHero.moveTo(mouseCoords, 1.5)
 			light.moveTo(mouseCoords, 1)
-			// theHero2.moveTo(mouseCoords)
-			// cursors.push(gameEngine.spawnMoveHereCursor(ctx, mouseCoords, 'GreenYellow'))
 		})
 
-		// canvas.addEventListener('mousemove', (event) => {
-		// 	currentMouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
-		// })
 
 		gameEngine.startGameLoop(canvas, allObjects, cursors, light, debug)
 	}

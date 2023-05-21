@@ -1,6 +1,6 @@
 import * as canvasTools from './canvas tools.js';
 
-export const createObject = (ctx, name, coords) => {
+export const createObject = (ctx, name, coords, sprite) => {
     const properties = {
         name: name,
         coords: canvasTools.createPoint(coords[0], coords[1]),
@@ -29,6 +29,9 @@ export const createObject = (ctx, name, coords) => {
             ctx.fillStyle = properties.color
             ctx.fill(path)
             ctx.closePath(path)
+            if(sprite){
+                ctx.drawImage(sprite, 0, 0, 30,60,properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, 30,30)
+            }
             //reset shadowColor
             ctx.shadowColor = 'rgba(0,0,0,0)'
         },
@@ -342,7 +345,7 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, isDebugg
             if (isDebugging) {
                 if (mouseCoords) {
                     canvasTools.setCanvasFont(ctx, { font: 'Fira Mono', color: 'black', size: '10' })
-                    ctx.fillText(`x:${mouseCoords[0]}, y:${mouseCoords[1]}`, mouseCoords[0], mouseCoords[1])
+                    ctx.fillText(`${mouseCoords[0]}, ${mouseCoords[1]}`, mouseCoords[0], mouseCoords[1] - 5)
                 }
                 let vectorScale = 20
                 for (let object of allObjects) {
@@ -366,6 +369,7 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, isDebugg
                     ctx.closePath()
                     canvasTools.setCanvasFont(ctx, { font: 'Fira Mono', color: 'black', size: '10' })
                     ctx.fillText(`${object.properties.speed}`, object.properties.coords[0], object.properties.coords[1])
+                    ctx.fillText(`${Math.round(object.properties.coords[0])}, ${Math.round(object.properties.coords[1])}`, object.properties.coords[0] + 5, object.properties.coords[1] + 10)
 
                     // if (object.properties.name === 'hero' || object.properties.name === 'point-light') {
                     //     console.log(object)

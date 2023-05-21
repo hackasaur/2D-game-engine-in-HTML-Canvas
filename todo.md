@@ -1,4 +1,5 @@
 # bugs
+- [ ] shodow of theHero object does not shift once object reaches the final coords
 - [x] hard to reproduce but object jumps to some other spot after stopping sometimes and speed increases too. 
     - typo wrote coords[0] instead of coords[1] in object update. and coordsToReach reference was used instead of value
 - [ ] controlled objects stick together and don't move after colliding
@@ -10,30 +11,39 @@
     - solved the bug by lazy fix, now both objects corner points are checked with respect to other
 
 # todo
-- [ ] import image texture
-- [ ] add frame rate control for debugging
-- [ ] add collision detection for circle bounding box
-- [ ] collision-detection should be an event for which collision-resolution logic can be given  
+## important and urgent
 - [ ] gravity
-- [ ] collision physics
+- [x] collision physics
+    - [x] speed should stop after one collision 
+- [x] import image texture
 - [ ] object rotation
-- [ ] use quadtree for collision optimization
+- [ ] animations
+- [x] changed draw() of createObject to use coords as center and calculate the top-left-coords. also had to do same in areColliding() 
+- [x] object should move from it's center
+- [ ] instead of moveTo coords, user should have control over object's velocity
+
+## important, not urgent
 - [ ] object collision could be missed between 2 frames, if displacement between frames is greater than object size.
-    - this can be solved by calculating potential object collision and calculating line intersection to see if they would collide 
+- [ ] use quadtree for collision optimization
 - [ ] speed should be calcuated in px/ms instead of px/frame to make it frame rate independent
-- [ ] speed should stop after one collision 
+- [x] make a seperate game engine module
+- [x] instead of getProperties() return properties so that it can be accessed as e.g. obj1.properties.coords
+- [x] point light source for rects using shadowOffset
 - [ ] use pointInPath() inbuilt function instead of the pointInsideBox() 
+- [x] show object velocity vectors x and y in debugging
+- [ ] add collision detection for circle bounding box
+    - this can be solved by calculating potential object collision and calculating line intersection to see if they would collide 
 - can ctx argument be removed from createObject etc. functions? a universal draw() could be seperated from these functions? 
-    - the createObject()'s object will just return the coords and object-shape?? and then the universalDraw() will draw on canvas
+- the createObject()'s object will just return the coords and object-shape?? and then the universalDraw() will draw on canvas
     - this way the functions will also be HTML canvas independent
 - [ ] multiple lightsources. find a better formula for shadow offset 
+- [ ] objects should have a property if they are collidable or not
 
-- [x] changed draw() of createObject to use coords as center and calculate the top-left-coords. also had to do same in areColliding() 
-- [x] point light source for rects using shadowOffset
-- [x] show object velocity vectors x and y in debugging
-- [x] object should move from it's center
-- [x] instead of getProperties() return properties so that it can be accessed as e.g. obj1.properties.coords
-- [x] make a seperate game engine module
+## not important not urgent
+- [ ] collision-detection should be an event for which collision-resolution logic can be given 
+
+## not important but urgent
+
 
 # features
 - point light source
@@ -41,6 +51,11 @@
 - debugging mode
 
 # notes
+**---2023---**
+**---may 21---**
+
+
+**--2021--**
 **---nov---**
 implemented shadow for a a light source for rectangles looks pretty cool!
 
