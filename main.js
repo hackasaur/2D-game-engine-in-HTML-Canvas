@@ -50,12 +50,12 @@ function main() {
 
 		canvas.addEventListener('click', (event) => {
 			let mouseCoords = physics.vector2D(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
-			theHero.moveTo(mouseCoords, 3)
+			theHero.moveTo(mouseCoords, 2)
 			light.moveTo(mouseCoords, 1)
 		})
 
 
-		gameEngine.startGameLoop(canvas, allObjects, cursors, light, true)
+		gameEngine.startGameLoop(canvas, allObjects, cursors, light, true, () => {allObjects[0].properties.velocity[1] += 0.01})
 	}
 }
 window.addEventListener('load', main)

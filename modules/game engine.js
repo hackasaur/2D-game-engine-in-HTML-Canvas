@@ -23,14 +23,14 @@ export const createObject = (ctx, name, coords, sprite) => {
         properties,
         draw() {
             let path = new Path2D
+            ctx.beginPath(path)
+            path.rect(properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, properties.width, properties.height)
+            ctx.strokeStyle = properties.color
+            ctx.stroke(path)
+            ctx.closePath(path)
             ctx.shadowColor = 'rgba(0, 0, 0, 0.3)'
             ctx.shadowOffsetX = properties.shadowOffset[0];
             ctx.shadowOffsetY = properties.shadowOffset[1];
-            ctx.beginPath(path)
-            path.rect(properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, properties.width, properties.height)
-            ctx.fillStyle = properties.color
-            ctx.fill(path)
-            ctx.closePath(path)
             if(sprite){
                 ctx.drawImage(sprite, 0, 0, 30, 60, properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, 40,40)
             }
@@ -41,9 +41,11 @@ export const createObject = (ctx, name, coords, sprite) => {
         update() {
 
             prevCoords = physics.vector2D(properties.coords[0], properties.coords[1])
+            let threshold = 2
 
             if (moveTo && (properties.coordsToReach[0] !== properties.coords[0]
                 || properties.coordsToReach[1] !== properties.coords[1])) {
+
                 if (calculated === false) {
                     let deltaX = properties.coordsToReach[0] - properties.coords[0]
                     let deltaY = properties.coordsToReach[1] - properties.coords[1]
@@ -55,29 +57,31 @@ export const createObject = (ctx, name, coords, sprite) => {
                     properties.velocity = physics.vector2D(Speed * cosTheta, Speed * slope * cosTheta)
                     calculated = true
                 }
-
+                
                 //logic for moving in a line towards the target coords
                 /* we can simply add a shift in the coords along the slope but the destination point will get missed and the object 
                 will not stop  at that point...to avoid this, in the case when the horizontal shift will go ahead of the destination 
                 point it will move the object to the destination directly and stop. */
 
-                if (properties.coordsToReach[0] - (properties.coords[0] + properties.velocity[0]) >= 0) {
-                    if (cosTheta < 0) {
+                if (Math.abs(properties.coordsToReach[0] - (properties.coords[0] + properties.velocity[0])) <= threshold && 
+                    Math.abs(properties.coordsToReach[1] - (properties.coords[1] + properties.velocity[1])) <= threshold) 
+                {
+                    // if (cosTheta < 0) {
                         //moving towards left and coordsToReach will have passed to the right
                         properties.coords = physics.vector2D(properties.coordsToReach[0], properties.coordsToReach[1])
                         properties.velocity = physics.vector2D(0, 0)
                         moveTo = false
-                    }
+                    // }
                 }
 
-                else if (properties.coordsToReach[0] - (properties.coords[0] + properties.velocity[0]) <= 0) {
-                    if (cosTheta >= 0) {
-                        //moving towards right and the coordsToReach will have passed to the left
-                        properties.coords = physics.vector2D(properties.coordsToReach[0], properties.coordsToReach[1])
-                        properties.velocity = physics.vector2D(0, 0)
-                        moveTo = false
-                    }
-                }
+                // else if (properties.coordsToReach[0] - (properties.coords[0] + properties.velocity[0]) <= 0) {
+                //     if (cosTheta >= 0) {
+                //         //moving towards right and the coordsToReach will have passed to the left
+                //         properties.coords = physics.vector2D(properties.coordsToReach[0], properties.coordsToReach[1])
+                //         properties.velocity = physics.vector2D(0, 0)
+                //         moveTo = false
+                //     }
+                // }
             }
             
             properties.coords[0] +=  properties.velocity[0]
