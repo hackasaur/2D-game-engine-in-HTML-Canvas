@@ -1,12 +1,13 @@
 # 2D game engine in HTML5 Canvas(work in progress🏗️)
-i'm building a game engine in HTML5 Canvas from scratch.
+Building a game engine in HTML5 Canvas from scratch
 
-these are the basic features i hope to achieve:
+These are the basic features I hope to achieve:
 - collision detection abiltiy for circle or rectangle bounding boxes
 - physics for collisions, gravity, lights
 - shaders for 2D world like dynamic shadows, shadows for arbitrary shapes
 - texture loading for objects and ability to add animations and sounds
 - camera movement 
+- online multiplayer capability 
 
 ![screenshot 2D game engine in HTML Canvas](https://github.com/hackasaur/2D-game-engine-in-HTML-Canvas/blob/master/2D%20game%20engine%20in%20HTML%20Canvas.png)
 
