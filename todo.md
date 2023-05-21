@@ -38,6 +38,7 @@
     - this way the functions will also be HTML canvas independent
 - [ ] multiple lightsources. find a better formula for shadow offset 
 - [ ] objects should have a property if they are collidable or not
+- [ ] seperate collision module
 
 ## not important not urgent
 - [ ] collision-detection should be an event for which collision-resolution logic can be given 

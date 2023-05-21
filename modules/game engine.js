@@ -1,21 +1,23 @@
 import * as canvasTools from './canvas tools.js';
+import * as physics from './physics.js';
 
 export const createObject = (ctx, name, coords, sprite) => {
     const properties = {
         name: name,
-        coords: canvasTools.createPoint(coords[0], coords[1]),
+        coords: physics.vector2D(coords[0], coords[1]),
         color: 'white',
         width: 30,
         height: 60,
-        coordsToReach: canvasTools.createPoint(coords[0], coords[1]),
-        speed: 0,
+        coordsToReach: physics.vector2D(coords[0], coords[1]),
         selectable: false,
-        velocity: canvasTools.createPoint(0, 0), //unit vector
-        shadowOffset: canvasTools.createPoint(0, 0)
+        velocity: physics.vector2D(0, 0), //unit vector
+        shadowOffset: physics.vector2D(0, 0)
     }
 
     let slope, cosTheta, prevCoords
+    let Speed = 0
     let calculated = false
+    let moveTo = false
 
     return {
         properties,
@@ -30,17 +32,18 @@ export const createObject = (ctx, name, coords, sprite) => {
             ctx.fill(path)
             ctx.closePath(path)
             if(sprite){
-                ctx.drawImage(sprite, 0, 0, 30,60,properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, 30,30)
+                ctx.drawImage(sprite, 0, 0, 30, 60, properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, 40,40)
             }
             //reset shadowColor
             ctx.shadowColor = 'rgba(0,0,0,0)'
         },
 
         update() {
-            prevCoords = canvasTools.createPoint(properties.coords[0], properties.coords[1])
 
-            if (properties.coordsToReach[0] !== properties.coords[0]
-                || properties.coordsToReach[1] !== properties.coords[1]) {
+            prevCoords = physics.vector2D(properties.coords[0], properties.coords[1])
+
+            if (moveTo && (properties.coordsToReach[0] !== properties.coords[0]
+                || properties.coordsToReach[1] !== properties.coords[1])) {
                 if (calculated === false) {
                     let deltaX = properties.coordsToReach[0] - properties.coords[0]
                     let deltaY = properties.coordsToReach[1] - properties.coords[1]
@@ -48,8 +51,8 @@ export const createObject = (ctx, name, coords, sprite) => {
                     let distanceFromCoordsTillCoordsToReach = Math.sqrt(deltaX ** 2 + deltaY ** 2)
                     cosTheta = deltaX / distanceFromCoordsTillCoordsToReach
                     // let horizontalIncrement = properties.speed * cosTheta
-                    // properties.velocity = canvasTools.createPoint(horizontalIncrement, slope * horizontalIncrement)
-                    properties.velocity = canvasTools.createPoint(cosTheta, slope * cosTheta)
+                    // properties.velocity = physics.vector2D(horizontalIncrement, slope * horizontalIncrement)
+                    properties.velocity = physics.vector2D(Speed * cosTheta, Speed * slope * cosTheta)
                     calculated = true
                 }
 
@@ -57,38 +60,35 @@ export const createObject = (ctx, name, coords, sprite) => {
                 /* we can simply add a shift in the coords along the slope but the destination point will get missed and the object 
                 will not stop  at that point...to avoid this, in the case when the horizontal shift will go ahead of the destination 
                 point it will move the object to the destination directly and stop. */
-                if (properties.coordsToReach[0] - (properties.coords[0] + properties.speed * properties.velocity[0]) > 0) {
-                    if (cosTheta >= 0) {
-                        //moving towards right and the coordsToReach will still be on the right
-                        properties.coords[0] += properties.speed * properties.velocity[0]
-                        properties.coords[1] += properties.speed * properties.velocity[1]
-                    }
-                    else if (cosTheta < 0) {
+
+                if (properties.coordsToReach[0] - (properties.coords[0] + properties.velocity[0]) >= 0) {
+                    if (cosTheta < 0) {
                         //moving towards left and coordsToReach will have passed to the right
-                        properties.coords = canvasTools.createPoint(properties.coordsToReach[0], properties.coordsToReach[1])
-                        properties.velocity = canvasTools.createPoint(0, 0)
+                        properties.coords = physics.vector2D(properties.coordsToReach[0], properties.coordsToReach[1])
+                        properties.velocity = physics.vector2D(0, 0)
+                        moveTo = false
                     }
                 }
 
-                else if (properties.coordsToReach[0] - (properties.coords[0] + properties.speed * properties.velocity[0]) <= 0) {
+                else if (properties.coordsToReach[0] - (properties.coords[0] + properties.velocity[0]) <= 0) {
                     if (cosTheta >= 0) {
                         //moving towards right and the coordsToReach will have passed to the left
-                        properties.coords = canvasTools.createPoint(properties.coordsToReach[0], properties.coordsToReach[1])
-                        properties.velocity = canvasTools.createPoint(0, 0)
-                    }
-                    else if (cosTheta < 0) {
-                        //moving towards left and the coordsToReach will still be on the left
-                        properties.coords[0] += properties.speed * properties.velocity[0]
-                        properties.coords[1] += properties.speed * properties.velocity[1]
+                        properties.coords = physics.vector2D(properties.coordsToReach[0], properties.coordsToReach[1])
+                        properties.velocity = physics.vector2D(0, 0)
+                        moveTo = false
                     }
                 }
             }
+            
+            properties.coords[0] +=  properties.velocity[0]
+            properties.coords[1] +=  properties.velocity[1]
         },
 
         moveTo(coords, speed) {
             properties.coordsToReach = coords
-            properties.speed = speed
+            Speed = speed
             calculated = false
+            moveTo = true
         },
 
         undoUpdate() {
@@ -97,73 +97,19 @@ export const createObject = (ctx, name, coords, sprite) => {
     }
 }
 
-function areColliding(object1, object2) {
-    let colliding = false
-
-    let topLeftCoords1 = canvasTools.createPoint(
-        object1.properties.coords[0] - object1.properties.width / 2,
-        object1.properties.coords[1] - object1.properties.height / 2)
-
-    let topLeftCoords2 = canvasTools.createPoint(
-        object2.properties.coords[0] - object2.properties.width / 2,
-        object2.properties.coords[1] - object2.properties.height / 2)
-
-    colliding = canvasTools.areBoxesOverlapping(
-        topLeftCoords2, object2.properties.width, object2.properties.height,
-        topLeftCoords1, object1.properties.width, object1.properties.height
-    )
-
-    // if (colliding) {
-    //     console.log(object1.properties.name, ' collided with ', object2.properties.name)
-    // }
-    return colliding
-}
-
-function coordsAtCollision(object1, object2) {
-    let object1Coords, object2Coords
-
-    //timeOfCollisionFor2Rects = (X1 - X2 +- (l1 + l2)/2) / (Vx2 - Vx1) --symmetric for y
-    let timeOfHorizontalCollision = Math.min(
-        (object1.properties.coords[0] - object2.properties.coords[0]
-            + (object1.properties.width + object2.properties.width) / 2) / (object2.properties.velocity[0] - object1.properties.velocity[0]),
-        (object1.properties.coords[0] - object2.properties.coords[0]
-            - (object1.properties.width + object2.properties.width) / 2) / (object2.properties.velocity[0] - object1.properties.velocity[0])
-    )
-    let timeOfVerticalCollision = Math.min(
-        (object1.properties.coords[1] - object2.properties.coords[1]
-            + (object1.properties.height + object2.properties.height) / 2) / (object2.properties.velocity[1] - object1.properties.velocity[1]),
-        (object1.properties.coords[1] - object2.properties.coords[1]
-            - (object1.properties.height + object2.properties.height) / 2) / (object2.properties.velocity[1] - object1.properties.velocity[1])
-    )
-    console.log('time of Horizontal', timeOfHorizontalCollision)
-    console.log('time of vertical', timeOfVerticalCollision)
-
-    if (timeOfHorizontalCollision >= 0) {
-        if ((timeOfVerticalCollision >= 0 && timeOfHorizontalCollision < timeOfVerticalCollision) || timeOfVerticalCollision < 0) {
-            object1Coords = canvasTools.createPoint(
-                object1.properties.coords[0] + object1.properties.velocity[0] * timeOfHorizontalCollision,
-                object1.properties.coords[1] + object1.properties.velocity[1] * timeOfHorizontalCollision
-            )
-            object2Coords = canvasTools.createPoint(
-                object2.properties.coords[0] + object2.properties.velocity[0] * timeOfHorizontalCollision,
-                object2.properties.coords[1] + object2.properties.velocity[1] * timeOfHorizontalCollision
-            )
-        }
-
+const updateCollidingObjectPairs = (collidingObjectPairs) => {
+    for (let pair of collidingObjectPairs) {
+        let object1 = pair[0]
+        let object2 = pair[1]
+        object1.undoUpdate()
+        object2.undoUpdate()
+        let coordsWhenCollide = physics.coordsAtCollision(object1, object2)
+        // console.log(coordsWhenCollide)
+        object1.properties.coords = coordsWhenCollide[0]
+        object2.properties.coords = coordsWhenCollide[1]
+        object1.properties.velocity = physics.vector2D(0,0)
+        object2.properties.velocity = physics.vector2D(0,0)
     }
-    else if (timeOfVerticalCollision >= 0) {
-        if ((timeOfHorizontalCollision >= 0 && timeOfVerticalCollision < timeOfHorizontalCollision) || timeOfHorizontalCollision < 0) {
-            object1Coords = canvasTools.createPoint(
-                object1.properties.coords[0] + object1.properties.velocity[0] * timeOfVerticalCollision,
-                object1.properties.coords[1] + object1.properties.velocity[1] * timeOfVerticalCollision
-            )
-            object2Coords = canvasTools.createPoint(
-                object2.properties.coords[0] + object2.properties.velocity[0] * timeOfVerticalCollision,
-                object2.properties.coords[1] + object2.properties.velocity[1] * timeOfVerticalCollision
-            )
-        }
-    }
-    return [object1Coords, object2Coords]
 }
 
 const collidingObjectPairs = (objects) => {
@@ -176,18 +122,7 @@ const collidingObjectPairs = (objects) => {
             if (objectsDone.includes(object2) || object1 === object2) {
                 continue
             }
-            else if (areColliding(object1, object2)) {
-                //     //     object1.undoUpdate()
-                //     //     object2.undoUpdate()
-                //     //     let coordsWhenCollide = coordsAtCollision(object1, object2)
-                //     //     console.log(coordsWhenCollide)
-                //     //     object1.properties.coords = coordsWhenCollide[0]
-                //     //     object2.properties.coords = coordsWhenCollide[1]
-                //     //     object1.properties.speed = 0
-                //     //     object2.properties.speed = 0
-                //     //     break
-                //     // }
-                // }
+            else if (physics.areColliding(object1, object2)) {
                 collidingObjectPairs.push([object1, object2])
             }
         }
@@ -196,28 +131,13 @@ const collidingObjectPairs = (objects) => {
     return collidingObjectPairs
 }
 
-const updateCollidingObjectPairs = (collidingObjectPairs) => {
-    for (let pair of collidingObjectPairs) {
-        let object1 = pair[0]
-        let object2 = pair[1]
-        object1.undoUpdate()
-        object2.undoUpdate()
-        let coordsWhenCollide = coordsAtCollision(object1, object2)
-        console.log(coordsWhenCollide)
-        object1.properties.coords = coordsWhenCollide[0]
-        object2.properties.coords = coordsWhenCollide[1]
-        object1.properties.speed = 0
-        object2.properties.speed = 0
-    }
-}
-
 const shadowOffsetForObject = (object, lightSource) => {
     let deltaX = object.properties.coords[0] - lightSource.properties.coords[0]
     let deltaY = object.properties.coords[1] - lightSource.properties.coords[1]
     let distance = Math.sqrt(deltaX ** 2 + deltaY ** 2)
     let shadowOffsetX = deltaX / (0.05 * distance)
     let shadowOffsetY = deltaY / (0.05 * distance)
-    return canvasTools.createPoint(shadowOffsetX, shadowOffsetY)
+    return physics.vector2D(shadowOffsetX, shadowOffsetY)
 }
 
 export const spawnMoveHereCursor = (ctx, coords, color) => {
@@ -306,12 +226,12 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, isDebugg
     let running = true
 
     canvas.addEventListener('click', (event) => {
-        mouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
+        mouseCoords = physics.vector2D(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
         cursors.push(spawnMoveHereCursor(ctx, mouseCoords, 'GreenYellow'))
     })
 
     canvas.addEventListener('mousemove', (event) => {
-        mouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
+        mouseCoords = physics.vector2D(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
     })
 
 
@@ -347,20 +267,21 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, isDebugg
                     canvasTools.setCanvasFont(ctx, { font: 'Fira Mono', color: 'black', size: '10' })
                     ctx.fillText(`${mouseCoords[0]}, ${mouseCoords[1]}`, mouseCoords[0], mouseCoords[1] - 5)
                 }
+
                 let vectorScale = 20
                 for (let object of allObjects) {
                     ctx.fillStyle = 'grey'
                     //center of rectangle
                     ctx.fillRect(object.properties.coords[0] - 1.5, object.properties.coords[1] - 1.5, 3, 3)
                     ctx.lineWidth = 2
-                    //vectorX
+                    // //vectorX
                     ctx.beginPath()
                     ctx.moveTo(object.properties.coords[0], object.properties.coords[1])
                     ctx.lineTo(object.properties.coords[0] + vectorScale * object.properties.velocity[0], object.properties.coords[1])
                     ctx.strokeStyle = 'red'
                     ctx.stroke()
                     ctx.closePath()
-                    //vectorY
+                    // //vectorY
                     ctx.beginPath()
                     ctx.strokeStyle = 'green'
                     ctx.moveTo(object.properties.coords[0], object.properties.coords[1])
@@ -368,12 +289,8 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, isDebugg
                     ctx.stroke()
                     ctx.closePath()
                     canvasTools.setCanvasFont(ctx, { font: 'Fira Mono', color: 'black', size: '10' })
-                    ctx.fillText(`${object.properties.speed}`, object.properties.coords[0], object.properties.coords[1])
+                    ctx.fillText(`${Math.round(Math.sqrt(object.properties.velocity[0]**2 + object.properties.velocity[1]**2))}`, object.properties.coords[0], object.properties.coords[1])
                     ctx.fillText(`${Math.round(object.properties.coords[0])}, ${Math.round(object.properties.coords[1])}`, object.properties.coords[0] + 5, object.properties.coords[1] + 10)
-
-                    // if (object.properties.name === 'hero' || object.properties.name === 'point-light') {
-                    //     console.log(object)
-                    // }
                 }
             }
         }

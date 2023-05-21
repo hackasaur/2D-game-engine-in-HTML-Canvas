@@ -1,5 +1,6 @@
 import * as canvasTools from './modules/canvas tools.js';
 import * as gameEngine from './modules/game engine.js';
+import * as physics from './modules/physics.js'
 
 function main() {
 	const canvas = document.getElementById('scene')
@@ -19,10 +20,12 @@ function main() {
 		let sprite = new Image()
 		sprite.src = "img/mario_sprite.png"	
 
-		let heroInitialCoords = canvasTools.createPoint(100, 100)
+		let heroInitialCoords = physics.vector2D(100, 100)
 		const theHero = gameEngine.createObject(ctx, 'hero', heroInitialCoords, sprite)
-		theHero.properties.height = 30
-		// const theHero2 = gameEngine.createObject(ctx, 'hero2', canvasTools.createPoint(200, 200), allObjects)
+		theHero.properties.height = 40
+		theHero.properties.width = 40
+		theHero.properties.velocity = physics.vector2D(2,2)
+		// const theHero2 = gameEngine.createObject(ctx, 'hero2', physics.vector2D(200, 200), allObjects)
 		allObjects.push(theHero)
 
 		let colors = ['blue', 'yellow', 'orange', 'grey']
@@ -31,7 +34,7 @@ function main() {
 			let obj
 			let radius = 400
 			obj = gameEngine.createObject(ctx, `obj${i}`,
-				canvasTools.createPoint(radius * Math.sin(2*Math.PI/8 * i) + canvas.width/2 , radius *  Math.cos(2*Math.PI/8 * i) + canvas.height/2)
+				physics.vector2D(radius * Math.sin(2*Math.PI/8 * i) + canvas.width/2 , radius *  Math.cos(2*Math.PI/8 * i) + canvas.height/2)
 			)
 			obj.properties.color = colors[Math.floor(3 * Math.random())]
 			obj.properties.width = Math.round(10 + 100 * Math.random())
@@ -39,20 +42,20 @@ function main() {
 			allObjects.push(obj)
 		}
 
-		let light = gameEngine.createObject(ctx, 'point-light', canvasTools.createPoint(500,100))
+		let light = gameEngine.createObject(ctx, 'point-light', physics.vector2D(500,100))
 		light.properties.width = 20
 		light.properties.height = 20
 
 		const cursors = []
 
 		canvas.addEventListener('click', (event) => {
-			let mouseCoords = canvasTools.createPoint(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
-			theHero.moveTo(mouseCoords, 1.5)
+			let mouseCoords = physics.vector2D(event.x - canvas.offsetLeft, event.y - canvas.offsetTop)
+			theHero.moveTo(mouseCoords, 3)
 			light.moveTo(mouseCoords, 1)
 		})
 
 
-		gameEngine.startGameLoop(canvas, allObjects, cursors, light, debug)
+		gameEngine.startGameLoop(canvas, allObjects, cursors, light, true)
 	}
 }
 window.addEventListener('load', main)
