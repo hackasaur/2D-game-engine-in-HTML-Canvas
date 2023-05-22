@@ -1,4 +1,7 @@
 # bugs
+- [x] hero or all objects disappear when the moveTo coords are close to the current coords
+    - division by zero in moveTo logic : deltaY/deltaX. -> handled the case whenn deltaX is 0
+    - in Collision logic if velocity is 0,0 for both the objects, the collision time is indeterminable, so for now fixed it by keeping the same coords in this case so that coords don't become undefined (might have to comeback to this)
 - [ ] shodow of theHero object does not shift once object reaches the final coords
 - [x] hard to reproduce but object jumps to some other spot after stopping sometimes and speed increases too. 
     - typo wrote coords[0] instead of coords[1] in object update. and coordsToReach reference was used instead of value
@@ -54,6 +57,8 @@
 # notes
 **---2023---**
 **---may 21---**
+seperated the collision functions and createPoint into a physics module
+added functionality to set velocity of an object
 
 
 **--2021--**

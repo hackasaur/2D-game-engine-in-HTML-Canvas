@@ -73,13 +73,22 @@ export function areColliding(object1, object2) {
 export function coordsAtCollision(object1, object2) {
     let object1Coords, object2Coords
 
+    console.assert(!isNaN(object1.properties.coords[0]) && !isNaN(object1.properties.coords[1]), `${object1.properties.coords}`)
+    console.assert(!isNaN(object2.properties.coords[0]) && !isNaN(object2.properties.coords[1]), `${object2.properties.coords}`)
+
+    // // console.assert(Math.abs(object2.properties.velocity[0] - object1.properties.velocity[0]) > 0 &&
+    //     Math.abs(object2.properties.velocity[1] - object1.properties.velocity[1]) > 0 , `${object1.properties.velocity}, ${object2.properties.velocity}`)
+
     //timeOfCollisionFor2Rects = (X1 - X2 +- (l1 + l2)/2) / (Vx2 - Vx1) --symmetric for y
+    // console.log(object1.properties.velocity, object2.properties.velocity)
+
     let timeOfHorizontalCollision = Math.min(
         (object1.properties.coords[0] - object2.properties.coords[0]
             + (object1.properties.width + object2.properties.width) / 2) / (object2.properties.velocity[0] - object1.properties.velocity[0]),
         (object1.properties.coords[0] - object2.properties.coords[0]
             - (object1.properties.width + object2.properties.width) / 2) / (object2.properties.velocity[0] - object1.properties.velocity[0])
     )
+
     let timeOfVerticalCollision = Math.min(
         (object1.properties.coords[1] - object2.properties.coords[1]
             + (object1.properties.height + object2.properties.height) / 2) / (object2.properties.velocity[1] - object1.properties.velocity[1]),
@@ -90,6 +99,7 @@ export function coordsAtCollision(object1, object2) {
     // console.log('time of vertical', timeOfVerticalCollision)
 
     if (timeOfHorizontalCollision >= 0) {
+        // if ((timeOfHorizontalCollision < timeOfVerticalCollision) || timeOfVerticalCollision < 0) {
         if ((timeOfVerticalCollision >= 0 && timeOfHorizontalCollision < timeOfVerticalCollision) || timeOfVerticalCollision < 0) {
             object1Coords = vector2D(
                 object1.properties.coords[0] + object1.properties.velocity[0] * timeOfHorizontalCollision,
@@ -113,6 +123,10 @@ export function coordsAtCollision(object1, object2) {
                 object2.properties.coords[1] + object2.properties.velocity[1] * timeOfVerticalCollision
             )
         }
+    }
+    else {
+        object1Coords = object1.properties.coords
+        object2Coords = object2.properties.coords
     }
     return [object1Coords, object2Coords]
 }

@@ -22,6 +22,7 @@ export const createObject = (ctx, name, coords, sprite) => {
     return {
         properties,
         draw() {
+            console.assert(!isNaN(properties.coords[0]) && !isNaN(properties.coords[1]), `${properties.coords}`)
             let path = new Path2D
             ctx.beginPath(path)
             path.rect(properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, properties.width, properties.height)
@@ -43,18 +44,25 @@ export const createObject = (ctx, name, coords, sprite) => {
             prevCoords = physics.vector2D(properties.coords[0], properties.coords[1])
             let threshold = 2
 
+
             if (moveTo && (properties.coordsToReach[0] !== properties.coords[0]
                 || properties.coordsToReach[1] !== properties.coords[1])) {
 
                 if (calculated === false) {
                     let deltaX = properties.coordsToReach[0] - properties.coords[0]
                     let deltaY = properties.coordsToReach[1] - properties.coords[1]
-                    slope = deltaY / deltaX
-                    let distanceFromCoordsTillCoordsToReach = Math.sqrt(deltaX ** 2 + deltaY ** 2)
-                    cosTheta = deltaX / distanceFromCoordsTillCoordsToReach
+                    if(deltaX !== 0){
+                        slope = deltaY / deltaX
+                        let distanceFromCoordsTillCoordsToReach = Math.sqrt(deltaX ** 2 + deltaY ** 2)
+                        cosTheta = deltaX / distanceFromCoordsTillCoordsToReach
+                        properties.velocity = physics.vector2D(Speed * cosTheta, Speed * slope * cosTheta)
+                    }
+                    else if (deltaY !== 0){
+                        properties.velocity = physics.vector2D(0, Speed * Math.sign(deltaY))
+                    }
+
                     // let horizontalIncrement = properties.speed * cosTheta
                     // properties.velocity = physics.vector2D(horizontalIncrement, slope * horizontalIncrement)
-                    properties.velocity = physics.vector2D(Speed * cosTheta, Speed * slope * cosTheta)
                     calculated = true
                 }
                 
@@ -66,26 +74,18 @@ export const createObject = (ctx, name, coords, sprite) => {
                 if (Math.abs(properties.coordsToReach[0] - (properties.coords[0] + properties.velocity[0])) <= threshold && 
                     Math.abs(properties.coordsToReach[1] - (properties.coords[1] + properties.velocity[1])) <= threshold) 
                 {
-                    // if (cosTheta < 0) {
                         //moving towards left and coordsToReach will have passed to the right
                         properties.coords = physics.vector2D(properties.coordsToReach[0], properties.coordsToReach[1])
-                        properties.velocity = physics.vector2D(0, 0)
+                        properties.velocity = physics.vector2D(0,0)
                         moveTo = false
-                    // }
                 }
-
-                // else if (properties.coordsToReach[0] - (properties.coords[0] + properties.velocity[0]) <= 0) {
-                //     if (cosTheta >= 0) {
-                //         //moving towards right and the coordsToReach will have passed to the left
-                //         properties.coords = physics.vector2D(properties.coordsToReach[0], properties.coordsToReach[1])
-                //         properties.velocity = physics.vector2D(0, 0)
-                //         moveTo = false
-                //     }
-                // }
             }
             
             properties.coords[0] +=  properties.velocity[0]
             properties.coords[1] +=  properties.velocity[1]
+
+            console.assert(!isNaN(properties.coords[0]) && !isNaN(properties.coords[1]), `${properties.coords}`)
+            console.assert(!isNaN(prevCoords[0]) && !isNaN(prevCoords[1]), `${prevCoords}`)
         },
 
         moveTo(coords, speed) {

@@ -55,7 +55,10 @@ function main() {
 		})
 
 
-		gameEngine.startGameLoop(canvas, allObjects, cursors, light, true, () => {allObjects[0].properties.velocity[1] += 0.01})
+		gameEngine.startGameLoop(canvas, allObjects, cursors, light, true, () => {
+			allObjects[0].properties.velocity[1] += 0.04
+			// console.log(allObjects[0].properties)
+		})
 	}
 }
 window.addEventListener('load', main)
