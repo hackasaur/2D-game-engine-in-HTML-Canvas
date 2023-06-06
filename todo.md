@@ -16,35 +16,38 @@
 # todo
 ## important and urgent
 - [ ] gravity
+- [ ] instead of moveTo coords, user should have control over object's velocity
+- [ ] object rotation
+- [ ] animations
+- [x] collision event should be emitted. is object touching ground or not, should be knowable
 - [x] collision physics
     - [x] speed should stop after one collision 
 - [x] import image texture
-- [ ] object rotation
-- [ ] animations
 - [x] changed draw() of createObject to use coords as center and calculate the top-left-coords. also had to do same in areColliding() 
 - [x] object should move from it's center
-- [ ] instead of moveTo coords, user should have control over object's velocity
 
 ## important, not urgent
 - [ ] object collision could be missed between 2 frames, if displacement between frames is greater than object size.
 - [ ] use quadtree for collision optimization
 - [ ] speed should be calcuated in px/ms instead of px/frame to make it frame rate independent
-- [x] make a seperate game engine module
-- [x] instead of getProperties() return properties so that it can be accessed as e.g. obj1.properties.coords
-- [x] point light source for rects using shadowOffset
 - [ ] use pointInPath() inbuilt function instead of the pointInsideBox() 
-- [x] show object velocity vectors x and y in debugging
+- [ ] look into SAT theorem etc. for better collision logic https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
 - [ ] add collision detection for circle bounding box
     - this can be solved by calculating potential object collision and calculating line intersection to see if they would collide 
-- can ctx argument be removed from createObject etc. functions? a universal draw() could be seperated from these functions? 
-- the createObject()'s object will just return the coords and object-shape?? and then the universalDraw() will draw on canvas
-    - this way the functions will also be HTML canvas independent
 - [ ] multiple lightsources. find a better formula for shadow offset 
 - [ ] objects should have a property if they are collidable or not
 - [ ] seperate collision module
+- [ ] buffer for key presses
+- [x] instead of getProperties() return properties so that it can be accessed as e.g. obj1.properties.coords
+- [x] point light source for rects using shadowOffset
+- [x] show object velocity vectors x and y in debugging
+- [x] make a seperate game engine module
 
 ## not important not urgent
 - [ ] collision-detection should be an event for which collision-resolution logic can be given 
+- can ctx argument be removed from createObject etc. functions? a universal draw() could be seperated from these functions? 
+- the createObject()'s object will just return the coords and object-shape?? and then the universalDraw() will draw on canvas
+    - this way the functions will also be HTML canvas independent
 
 ## not important but urgent
 
@@ -56,10 +59,17 @@
 
 # notes
 **---2023---**
-**---may 21---**
+**---june---**
+wrote some janky code to detect which side of object is colliding. it checks which vertice of the hitbox is overlapping and if the collision vertical/horizontal then if the points are on the right/left/bottom/top side and so the other object would be colliding on the opposite side
+
+**---may---**
+added playAnimation() and stopAnimation(). added a buffer for key presses
+changed collision resolution logic. now only the coords normal to the collision surface are changed so that the object can slide on the surface. removed undoUpdate() added coordsBeforeUpdate() instead
+
+fixed division by zero issue which was vanishing the hero or other objects. handled the deltaY/deltaX logic in moveTo
+
 seperated the collision functions and createPoint into a physics module
 added functionality to set velocity of an object
-
 
 **--2021--**
 **---nov---**

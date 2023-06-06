@@ -8,33 +8,48 @@ export const createObject = (ctx, name, coords, sprite) => {
         color: 'white',
         width: 30,
         height: 60,
-        coordsToReach: physics.vector2D(coords[0], coords[1]),
-        selectable: false,
-        velocity: physics.vector2D(0, 0), //unit vector
-        shadowOffset: physics.vector2D(0, 0)
+        // coordsToReach: physics.vector2D(coords[0], coords[1]),
+        velocity: physics.vector2D(0, 0),
+        shadowOffset: physics.vector2D(0, 0),
+        animations: [],
+        sidesColliding: [],
     }
 
-    let slope, cosTheta, prevCoords
+    let slope, cosTheta, prevCoords, coordsToReach
     let Speed = 0
     let calculated = false
     let moveTo = false
 
     return {
         properties,
-        draw() {
+        draw(debug = false) {
             console.assert(!isNaN(properties.coords[0]) && !isNaN(properties.coords[1]), `${properties.coords}`)
-            let path = new Path2D
-            ctx.beginPath(path)
-            path.rect(properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, properties.width, properties.height)
-            ctx.strokeStyle = properties.color
-            ctx.stroke(path)
-            ctx.closePath(path)
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)'
-            ctx.shadowOffsetX = properties.shadowOffset[0];
-            ctx.shadowOffsetY = properties.shadowOffset[1];
-            if(sprite){
-                ctx.drawImage(sprite, 0, 0, 30, 60, properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, 40,40)
-            }
+            // if (debug) {
+                let path = new Path2D
+                ctx.beginPath(path)
+                path.rect(properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, properties.width, properties.height)
+                ctx.strokeStyle = properties.color
+                ctx.stroke(path)
+                ctx.closePath(path)
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)'
+                ctx.shadowOffsetX = properties.shadowOffset[0];
+                ctx.shadowOffsetY = properties.shadowOffset[1];
+            // }
+            properties.animations.forEach((animation) => {
+                if (animation['play']) {
+                    console.assert(sprite != undefined, `${animation}`)
+                    if (animation['sprite']) {
+                        ctx.drawImage(animation.sprite, animation.startCoords[0] + (animation.offset * Math.round(animation.frameNo)), animation.startCoords[1], animation.size[0], animation.size[1], properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, animation.size[0], animation.size[1])
+                        if (animation.frameNo < (animation.noOfFrames - 1)) {
+                            animation.frameNo += animation.playbackSpeed
+                        }
+                        else {
+                            animation.frameNo = 0
+                        }
+                    }
+                }
+            })
+
             //reset shadowColor
             ctx.shadowColor = 'rgba(0,0,0,0)'
         },
@@ -45,19 +60,19 @@ export const createObject = (ctx, name, coords, sprite) => {
             let threshold = 2
 
 
-            if (moveTo && (properties.coordsToReach[0] !== properties.coords[0]
-                || properties.coordsToReach[1] !== properties.coords[1])) {
+            if (moveTo && (coordsToReach[0] !== properties.coords[0]
+                || coordsToReach[1] !== properties.coords[1])) {
 
                 if (calculated === false) {
-                    let deltaX = properties.coordsToReach[0] - properties.coords[0]
-                    let deltaY = properties.coordsToReach[1] - properties.coords[1]
-                    if(deltaX !== 0){
+                    let deltaX = coordsToReach[0] - properties.coords[0]
+                    let deltaY = coordsToReach[1] - properties.coords[1]
+                    if (deltaX !== 0) {
                         slope = deltaY / deltaX
                         let distanceFromCoordsTillCoordsToReach = Math.sqrt(deltaX ** 2 + deltaY ** 2)
                         cosTheta = deltaX / distanceFromCoordsTillCoordsToReach
                         properties.velocity = physics.vector2D(Speed * cosTheta, Speed * slope * cosTheta)
                     }
-                    else if (deltaY !== 0){
+                    else if (deltaY !== 0) {
                         properties.velocity = physics.vector2D(0, Speed * Math.sign(deltaY))
                     }
 
@@ -65,54 +80,157 @@ export const createObject = (ctx, name, coords, sprite) => {
                     // properties.velocity = physics.vector2D(horizontalIncrement, slope * horizontalIncrement)
                     calculated = true
                 }
-                
+
                 //logic for moving in a line towards the target coords
                 /* we can simply add a shift in the coords along the slope but the destination point will get missed and the object 
                 will not stop  at that point...to avoid this, in the case when the horizontal shift will go ahead of the destination 
                 point it will move the object to the destination directly and stop. */
 
-                if (Math.abs(properties.coordsToReach[0] - (properties.coords[0] + properties.velocity[0])) <= threshold && 
-                    Math.abs(properties.coordsToReach[1] - (properties.coords[1] + properties.velocity[1])) <= threshold) 
-                {
-                        //moving towards left and coordsToReach will have passed to the right
-                        properties.coords = physics.vector2D(properties.coordsToReach[0], properties.coordsToReach[1])
-                        properties.velocity = physics.vector2D(0,0)
-                        moveTo = false
+                if (Math.abs(coordsToReach[0] - (properties.coords[0] + properties.velocity[0])) <= threshold &&
+                    Math.abs(coordsToReach[1] - (properties.coords[1] + properties.velocity[1])) <= threshold) {
+                    //moving towards left and coordsToReach will have passed to the right
+                    properties.coords = physics.vector2D(coordsToReach[0], coordsToReach[1])
+                    properties.velocity = physics.vector2D(0, 0)
+                    moveTo = false
                 }
             }
-            
-            properties.coords[0] +=  properties.velocity[0]
-            properties.coords[1] +=  properties.velocity[1]
+
+            properties.coords[0] += properties.velocity[0]
+            properties.coords[1] += properties.velocity[1]
 
             console.assert(!isNaN(properties.coords[0]) && !isNaN(properties.coords[1]), `${properties.coords}`)
             console.assert(!isNaN(prevCoords[0]) && !isNaN(prevCoords[1]), `${prevCoords}`)
         },
 
         moveTo(coords, speed) {
-            properties.coordsToReach = coords
+            coordsToReach = coords
             Speed = speed
             calculated = false
             moveTo = true
         },
 
-        undoUpdate() {
-            properties.coords = prevCoords
+        // undoUpdate() {
+        //     properties.coords = prevCoords //prevCoords is used for collision resolution
+        // },
+
+        coordsBeforeUpdate() {
+            return prevCoords
+        },
+
+        addAnimationFromSprite(name, sprite, startCoords, offset, noOfFrames, size, playbackSpeed) {
+            properties.animations.push({
+                "name": name,
+                "sprite": sprite,
+                "startCoords": startCoords,
+                "offset": offset,
+                "noOfFrames": noOfFrames,
+                "frameNo": 0,
+                "size": size,
+                "playbackSpeed": playbackSpeed,
+                "play": false
+            })
+        },
+
+        playAnimation(name){
+            properties.animations.forEach((animation) => {
+                if(animation.name === name){
+                    animation.play = true
+                }
+                else if(animation.name !== name){
+                    animation.play = false
+                }
+            })
+        },
+
+        stopAnimation(){
+            properties.animations.forEach((animation) => {
+                    animation.play = false
+            })
+        }
+    }
+}
+
+export const controlsBuffer = () => {
+    let buffer = []
+
+    return {
+        buffer,
+        push(key){
+            buffer.push(key)
+        },
+        shift(){
+            let key = buffer.shift()
+            return key
         }
     }
 }
 
 const updateCollidingObjectPairs = (collidingObjectPairs) => {
+
     for (let pair of collidingObjectPairs) {
-        let object1 = pair[0]
-        let object2 = pair[1]
-        object1.undoUpdate()
-        object2.undoUpdate()
-        let coordsWhenCollide = physics.coordsAtCollision(object1, object2)
-        // console.log(coordsWhenCollide)
-        object1.properties.coords = coordsWhenCollide[0]
-        object2.properties.coords = coordsWhenCollide[1]
-        object1.properties.velocity = physics.vector2D(0,0)
-        object2.properties.velocity = physics.vector2D(0,0)
+        let object1 = pair.pair[0]
+        let object2 = pair.pair[1]
+        let coordsWhenCollide = physics.coordsAtCollision(object1, object2, object1.coordsBeforeUpdate(), object2.coordsBeforeUpdate())
+
+        if (coordsWhenCollide[2]) { //colliding horizontally
+            object1.properties.coords[0] = coordsWhenCollide[0][0]
+            object2.properties.coords[0] = coordsWhenCollide[1][0]
+            object1.properties.velocity[0] = 0
+
+            if(pair.object == 1){
+                if(pair.coords[0] == 0){
+                    object1.properties.sidesColliding.push("LEFT")
+                    object2.properties.sidesColliding.push("RIGHT")
+                }
+                else if(pair.coords[0] == 1){
+                    object1.properties.sidesColliding.push("RIGHT")
+                    object2.properties.sidesColliding.push("LEFT")
+                }
+            }
+            else if(pair.object == 2){
+                if(pair.coords[0] == 0){
+                    object2.properties.sidesColliding.push("LEFT")
+                    object1.properties.sidesColliding.push("RIGHT")
+                }
+                else if(pair.coords[0] == 1){
+                    object2.properties.sidesColliding.push("RIGHT")
+                    object1.properties.sidesColliding.push("LEFT")
+                }
+            }
+            
+        }
+        else { //colliding vertically
+            object1.properties.coords[1] = coordsWhenCollide[0][1]
+            object2.properties.coords[1] = coordsWhenCollide[1][1]
+            object1.properties.velocity[1] = 0
+
+            if(pair.object == 1){
+                if(pair.coords[1] == 0){
+                    object1.properties.sidesColliding.push("TOP")
+                    object2.properties.sidesColliding.push("BOTTOM")
+                }
+                else if(pair.coords[1] == 1){
+                    object1.properties.sidesColliding.push("BOTTOM")
+                    object2.properties.sidesColliding.push("TOP")
+                }
+            }
+            else if(pair.object == 2){
+                if(pair.coords[1] == 0){
+                    object2.properties.sidesColliding.push("TOP")
+                    object1.properties.sidesColliding.push("BOTTOM")
+                }
+                else if(pair.coords[1] == 1){
+                    object2.properties.sidesColliding.push("BOTTOM")
+                    object1.properties.sidesColliding.push("TOP")
+                }
+            }
+        }
+
+        // console.log(`${object1.properties.name}: ${object1.properties.sidesColliding}`)
+        // console.log(`${object2.properties.name}: ${object2.properties.sidesColliding}`)
+
+        console.assert(!isNaN(object1.properties.coords[0]) && !isNaN(object1.properties.coords[1]), `${object1.properties.coords}`)
+        console.assert(!isNaN(object2.properties.coords[0]) && !isNaN(object2.properties.coords[1]), `${object2.properties.coords}`)
     }
 }
 
@@ -126,10 +244,12 @@ const collidingObjectPairs = (objects) => {
             if (objectsDone.includes(object2) || object1 === object2) {
                 continue
             }
-            else if (physics.areColliding(object1, object2)) {
-                collidingObjectPairs.push([object1, object2])
+            else if (physics.areColliding(object1, object2).overlap) {
+                let collisionInfo = physics.areColliding(object1, object2)     
+                collidingObjectPairs.push({pair:[object1, object2], object:collisionInfo.object, coords: collisionInfo.coords})
             }
         }
+
         objectsDone.push(object1)
     }
     return collidingObjectPairs
@@ -186,6 +306,7 @@ export const updateScene = (sceneObjects, sceneCursors, lightSource) => {
 
     sceneObjects.forEach((obj) => {
         obj.update()
+        obj.properties.sidesColliding = []
     })
 
     updateCollidingObjectPairs(collidingObjectPairs(sceneObjects))
@@ -199,11 +320,11 @@ export const updateScene = (sceneObjects, sceneCursors, lightSource) => {
     })
 }
 
-export const paintScene = (sceneObjects, sceneCursors, lightSource) => {
+export const paintScene = (sceneObjects, sceneCursors, lightSource, debug = false) => {
     lightSource.draw()
 
     sceneObjects.forEach((obj) => {
-        obj.draw()
+        obj.draw(debug)
     })
 
     for (let i = 0; i < sceneCursors.length; i++) {
@@ -218,8 +339,8 @@ export const paintScene = (sceneObjects, sceneCursors, lightSource) => {
     }
 }
 
-export const startGameLoop = (canvas, allObjects, cursors, lightSource, isDebugging = false, code = () => { return 0 }) => {
-    //allObjects is a array containing all the objects of the scene. 
+export const startGameLoop = (canvas, allObjects, cursors, lightSource, debug = false, code = () => { return 0 }) => {
+    //allObjects is an array containing all the collidable objects of the scene. 
     //cursors is a array used to store all the current moveHereCursors
     let mouseCoords
     let secondsPassed
@@ -241,8 +362,18 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, isDebugg
 
     window.addEventListener('keydown', (event) => {
         let keyPressed = event.key
+
         if (keyPressed === 'Escape') {
             running = false
+        }
+
+        if (keyPressed === ' ') {
+            if (running == false) {
+                running = true
+            }
+            else if (running == true) {
+                running = false
+            }
         }
     })
 
@@ -252,7 +383,7 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, isDebugg
         if (running) {
             canvasTools.paintBackground(ctx, '#353347')
             updateScene(allObjects, cursors, lightSource)
-            paintScene(allObjects, cursors, lightSource)
+            paintScene(allObjects, cursors, lightSource, debug)
 
             //FPS
             // Calculate the number of seconds passed since the last frame
@@ -266,7 +397,7 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, isDebugg
             canvasTools.setCanvasFont(ctx, { font: 'Arial', size: '25px', color: 'white' })
             ctx.fillText("FPS: " + fps, 50, 20)
 
-            if (isDebugging) {
+            if (debug) {
                 if (mouseCoords) {
                     canvasTools.setCanvasFont(ctx, { font: 'Fira Mono', color: 'black', size: '10' })
                     ctx.fillText(`${mouseCoords[0]}, ${mouseCoords[1]}`, mouseCoords[0], mouseCoords[1] - 5)
@@ -293,7 +424,7 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, isDebugg
                     ctx.stroke()
                     ctx.closePath()
                     canvasTools.setCanvasFont(ctx, { font: 'Fira Mono', color: 'black', size: '10' })
-                    ctx.fillText(`${Math.round(Math.sqrt(object.properties.velocity[0]**2 + object.properties.velocity[1]**2))}`, object.properties.coords[0], object.properties.coords[1])
+                    ctx.fillText(`${Math.round(Math.sqrt(object.properties.velocity[0] ** 2 + object.properties.velocity[1] ** 2))}`, object.properties.coords[0], object.properties.coords[1])
                     ctx.fillText(`${Math.round(object.properties.coords[0])}, ${Math.round(object.properties.coords[1])}`, object.properties.coords[0] + 5, object.properties.coords[1] + 10)
                 }
             }

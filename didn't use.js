@@ -175,3 +175,31 @@ export const whereTwoRectsOverlap = (topLeftCoords1, width1, height1, topLeftCoo
     // }
     return undefined
 }
+
+
+export const areBoxesOverlapping = (topLeftCoords1, width1, height1, topLeftCoords2, width2, height2) => {
+    let topRightCoords1 = vector2D(topLeftCoords1[0] + width1, topLeftCoords1[1])
+    let bottomRightCoords1 = vector2D(topLeftCoords1[0] + width1, topLeftCoords1[1] + height1)
+    let bottomLeftCoords1 = vector2D(topLeftCoords1[0], topLeftCoords1[1] + height1)
+
+    if (isPointInsideBox(topLeftCoords1, topLeftCoords2, width2, height2) ||
+        isPointInsideBox(topRightCoords1, topLeftCoords2, width2, height2) ||
+        isPointInsideBox(bottomRightCoords1, topLeftCoords2, width2, height2) ||
+        isPointInsideBox(bottomLeftCoords1, topLeftCoords2, width2, height2)
+    ) {
+        return true
+    }
+
+    let topRightCoords2 = vector2D(topLeftCoords2[0] + width2, topLeftCoords2[1])
+    let bottomRightCoords2 = vector2D(topLeftCoords2[0] + width2, topLeftCoords2[1] + height2)
+    let bottomLeftCoords2 = vector2D(topLeftCoords2[0], topLeftCoords2[1] + height2)
+
+    if (isPointInsideBox(topLeftCoords2, topLeftCoords1, width1, height1) ||
+        isPointInsideBox(topRightCoords2, topLeftCoords1, width1, height1) ||
+        isPointInsideBox(bottomRightCoords2, topLeftCoords1, width1, height1) ||
+        isPointInsideBox(bottomLeftCoords2, topLeftCoords1, width1, height1)
+    ) {
+        return true
+    }
+    return false
+}

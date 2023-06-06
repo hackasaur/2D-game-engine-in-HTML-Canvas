@@ -24,31 +24,38 @@ export const areBoxesOverlapping = (topLeftCoords1, width1, height1, topLeftCoor
     let bottomRightCoords1 = vector2D(topLeftCoords1[0] + width1, topLeftCoords1[1] + height1)
     let bottomLeftCoords1 = vector2D(topLeftCoords1[0], topLeftCoords1[1] + height1)
 
-    if (isPointInsideBox(topLeftCoords1, topLeftCoords2, width2, height2) ||
-        isPointInsideBox(topRightCoords1, topLeftCoords2, width2, height2) ||
-        isPointInsideBox(bottomRightCoords1, topLeftCoords2, width2, height2) ||
-        isPointInsideBox(bottomLeftCoords1, topLeftCoords2, width2, height2)
-    ) {
-        return true
+    let obj1Coords = [  [topLeftCoords1,  topRightCoords1], 
+                        [bottomLeftCoords1, bottomRightCoords1]]
+    
+    for(let i=0; i <= 1; i++){
+        for(let j=0; j <= 1; j++){
+            if(isPointInsideBox(obj1Coords[i][j], topLeftCoords2, width2, height2)){
+                return {overlap: true, object : 1, coords: [j, i]}
+            }
+        }
     }
 
     let topRightCoords2 = vector2D(topLeftCoords2[0] + width2, topLeftCoords2[1])
     let bottomRightCoords2 = vector2D(topLeftCoords2[0] + width2, topLeftCoords2[1] + height2)
     let bottomLeftCoords2 = vector2D(topLeftCoords2[0], topLeftCoords2[1] + height2)
 
-    if (isPointInsideBox(topLeftCoords2, topLeftCoords1, width1, height1) ||
-        isPointInsideBox(topRightCoords2, topLeftCoords1, width1, height1) ||
-        isPointInsideBox(bottomRightCoords2, topLeftCoords1, width1, height1) ||
-        isPointInsideBox(bottomLeftCoords2, topLeftCoords1, width1, height1)
-    ) {
-        return true
+    let obj2Coords = [  [topLeftCoords2,  topRightCoords2], 
+                        [bottomLeftCoords2, bottomRightCoords2]]
+
+    for(let i=0; i <= 1; i++){
+        for(let j=0; j <= 1; j++){
+            if(isPointInsideBox(obj2Coords[i][j], topLeftCoords1, width1, height1)){
+                return {overlap: true, object : 2, coords: [j, i]}
+            }
+        }
     }
-    return false
+    
+    return {overlap: false}
 }
 
 export function areColliding(object1, object2) {
     /*works only for straight rectangles*/
-    let colliding = false
+    let colliding
 
     let topLeftCoords1 = vector2D(
         object1.properties.coords[0] - object1.properties.width / 2,
@@ -59,8 +66,8 @@ export function areColliding(object1, object2) {
         object2.properties.coords[1] - object2.properties.height / 2)
 
     colliding = areBoxesOverlapping(
-        topLeftCoords2, object2.properties.width, object2.properties.height,
-        topLeftCoords1, object1.properties.width, object1.properties.height
+        topLeftCoords1, object1.properties.width, object1.properties.height,
+        topLeftCoords2, object2.properties.width, object2.properties.height
     )
 
     // if (colliding) {
@@ -70,11 +77,11 @@ export function areColliding(object1, object2) {
 }
 
 
-export function coordsAtCollision(object1, object2) {
-    let object1Coords, object2Coords
+export function coordsAtCollision(object1, object2, object1CoordsBeforeHit, object2CoordsBeforeHit) {
+    let object1Coords, object2Coords, horizontal
 
-    console.assert(!isNaN(object1.properties.coords[0]) && !isNaN(object1.properties.coords[1]), `${object1.properties.coords}`)
-    console.assert(!isNaN(object2.properties.coords[0]) && !isNaN(object2.properties.coords[1]), `${object2.properties.coords}`)
+    console.assert(!isNaN(object1CoordsBeforeHit[0]) && !isNaN(object1CoordsBeforeHit[1]), `${object1CoordsBeforeHit}`)
+    console.assert(!isNaN(object2CoordsBeforeHit[0]) && !isNaN(object2CoordsBeforeHit[1]), `${object2CoordsBeforeHit}`)
 
     // // console.assert(Math.abs(object2.properties.velocity[0] - object1.properties.velocity[0]) > 0 &&
     //     Math.abs(object2.properties.velocity[1] - object1.properties.velocity[1]) > 0 , `${object1.properties.velocity}, ${object2.properties.velocity}`)
@@ -83,16 +90,16 @@ export function coordsAtCollision(object1, object2) {
     // console.log(object1.properties.velocity, object2.properties.velocity)
 
     let timeOfHorizontalCollision = Math.min(
-        (object1.properties.coords[0] - object2.properties.coords[0]
+        (object1CoordsBeforeHit[0] - object2CoordsBeforeHit[0]
             + (object1.properties.width + object2.properties.width) / 2) / (object2.properties.velocity[0] - object1.properties.velocity[0]),
-        (object1.properties.coords[0] - object2.properties.coords[0]
+        (object1CoordsBeforeHit[0] - object2CoordsBeforeHit[0]
             - (object1.properties.width + object2.properties.width) / 2) / (object2.properties.velocity[0] - object1.properties.velocity[0])
     )
 
     let timeOfVerticalCollision = Math.min(
-        (object1.properties.coords[1] - object2.properties.coords[1]
+        (object1CoordsBeforeHit[1] - object2CoordsBeforeHit[1]
             + (object1.properties.height + object2.properties.height) / 2) / (object2.properties.velocity[1] - object1.properties.velocity[1]),
-        (object1.properties.coords[1] - object2.properties.coords[1]
+        (object1CoordsBeforeHit[1] - object2CoordsBeforeHit[1]
             - (object1.properties.height + object2.properties.height) / 2) / (object2.properties.velocity[1] - object1.properties.velocity[1])
     )
     // console.log('time of Horizontal', timeOfHorizontalCollision)
@@ -102,33 +109,35 @@ export function coordsAtCollision(object1, object2) {
         // if ((timeOfHorizontalCollision < timeOfVerticalCollision) || timeOfVerticalCollision < 0) {
         if ((timeOfVerticalCollision >= 0 && timeOfHorizontalCollision < timeOfVerticalCollision) || timeOfVerticalCollision < 0) {
             object1Coords = vector2D(
-                object1.properties.coords[0] + object1.properties.velocity[0] * timeOfHorizontalCollision,
-                object1.properties.coords[1] + object1.properties.velocity[1] * timeOfHorizontalCollision
+                object1CoordsBeforeHit[0] + object1.properties.velocity[0] * timeOfHorizontalCollision,
+                object1CoordsBeforeHit[1] + object1.properties.velocity[1] * timeOfHorizontalCollision
             )
             object2Coords = vector2D(
-                object2.properties.coords[0] + object2.properties.velocity[0] * timeOfHorizontalCollision,
-                object2.properties.coords[1] + object2.properties.velocity[1] * timeOfHorizontalCollision
+                object2CoordsBeforeHit[0] + object2.properties.velocity[0] * timeOfHorizontalCollision,
+                object2CoordsBeforeHit[1] + object2.properties.velocity[1] * timeOfHorizontalCollision
             )
+            horizontal = true
         }
 
     }
     else if (timeOfVerticalCollision >= 0) {
         if ((timeOfHorizontalCollision >= 0 && timeOfVerticalCollision < timeOfHorizontalCollision) || timeOfHorizontalCollision < 0) {
             object1Coords = vector2D(
-                object1.properties.coords[0] + object1.properties.velocity[0] * timeOfVerticalCollision,
-                object1.properties.coords[1] + object1.properties.velocity[1] * timeOfVerticalCollision
+                object1CoordsBeforeHit[0] + object1.properties.velocity[0] * timeOfVerticalCollision,
+                object1CoordsBeforeHit[1] + object1.properties.velocity[1] * timeOfVerticalCollision
             )
             object2Coords = vector2D(
-                object2.properties.coords[0] + object2.properties.velocity[0] * timeOfVerticalCollision,
-                object2.properties.coords[1] + object2.properties.velocity[1] * timeOfVerticalCollision
+                object2CoordsBeforeHit[0] + object2.properties.velocity[0] * timeOfVerticalCollision,
+                object2CoordsBeforeHit[1] + object2.properties.velocity[1] * timeOfVerticalCollision
             )
+            horizontal = false
         }
     }
     else {
-        object1Coords = object1.properties.coords
-        object2Coords = object2.properties.coords
+        object1Coords = object1CoordsBeforeHit
+        object2Coords = object2CoordsBeforeHit
     }
-    return [object1Coords, object2Coords]
+    return [object1Coords, object2Coords, horizontal]
 }
 
 export const distanceBetweenPoints = (coords1, coords2) => {
