@@ -1,4 +1,3 @@
-import * as canvasTools from './modules/canvas tools.js';
 import * as gameEngine from './modules/game engine.js';
 import * as physics from './modules/physics.js'
 
@@ -24,7 +23,7 @@ function main() {
 		sprite_flipped.src = "img/mario_sprite_flipped.png"	
 
 		let heroInitialCoords = physics.vector2D(100, 100)
-		const theHero = gameEngine.createObject(ctx, 'hero', heroInitialCoords, sprite)
+		const theHero = gameEngine.createObject(ctx, 'hero', heroInitialCoords)
 		theHero.properties.width = 32
 		theHero.properties.height = 65
 		theHero.addAnimationFromSprite("idle", sprite, physics.vector2D(0,0), 30, 1,physics.vector2D(30,65), 1)

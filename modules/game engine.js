@@ -1,7 +1,7 @@
-import * as canvasTools from './canvas tools.js';
+import * as txtTools from './text tools.js';
 import * as physics from './physics.js';
 
-export const createObject = (ctx, name, coords, sprite) => {
+export const createObject = (ctx, name, coords) => {
     const properties = {
         name: name,
         coords: physics.vector2D(coords[0], coords[1]),
@@ -37,9 +37,9 @@ export const createObject = (ctx, name, coords, sprite) => {
             // }
             properties.animations.forEach((animation) => {
                 if (animation['play']) {
-                    console.assert(sprite != undefined, `${animation}`)
+                    console.assert(animation['sprite'] != undefined, `${animation}`)
                     if (animation['sprite']) {
-                        ctx.drawImage(animation.sprite, animation.startCoords[0] + (animation.offset * Math.round(animation.frameNo)), animation.startCoords[1], animation.size[0], animation.size[1], properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, animation.size[0], animation.size[1])
+                        ctx.drawImage(animation['sprite'], animation.startCoords[0] + (animation.offset * Math.round(animation.frameNo)), animation.startCoords[1], animation.size[0], animation.size[1], properties.coords[0] - properties.width / 2, properties.coords[1] - properties.height / 2, animation.size[0], animation.size[1])
                         if (animation.frameNo < (animation.noOfFrames - 1)) {
                             animation.frameNo += animation.playbackSpeed
                         }
@@ -381,7 +381,7 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, debug = 
         code()
 
         if (running) {
-            canvasTools.paintBackground(ctx, '#353347')
+            txtTools.paintBackground(ctx, '#353347')
             updateScene(allObjects, cursors, lightSource)
             paintScene(allObjects, cursors, lightSource, debug)
 
@@ -394,12 +394,12 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, debug = 
 
             //show fps
             ctx.fillStyle = 'black'
-            canvasTools.setCanvasFont(ctx, { font: 'Arial', size: '25px', color: 'white' })
+            txtTools.setCanvasFont(ctx, { font: 'Arial', size: '25px', color: 'white' })
             ctx.fillText("FPS: " + fps, 50, 20)
 
             if (debug) {
                 if (mouseCoords) {
-                    canvasTools.setCanvasFont(ctx, { font: 'Fira Mono', color: 'black', size: '10' })
+                    txtTools.setCanvasFont(ctx, { font: 'Fira Mono', color: 'black', size: '10' })
                     ctx.fillText(`${mouseCoords[0]}, ${mouseCoords[1]}`, mouseCoords[0], mouseCoords[1] - 5)
                 }
 
@@ -423,7 +423,7 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, debug = 
                     ctx.lineTo(object.properties.coords[0], object.properties.coords[1] + vectorScale * object.properties.velocity[1])
                     ctx.stroke()
                     ctx.closePath()
-                    canvasTools.setCanvasFont(ctx, { font: 'Fira Mono', color: 'black', size: '10' })
+                    txtTools.setCanvasFont(ctx, { font: 'Fira Mono', color: 'black', size: '10' })
                     ctx.fillText(`${Math.round(Math.sqrt(object.properties.velocity[0] ** 2 + object.properties.velocity[1] ** 2))}`, object.properties.coords[0], object.properties.coords[1])
                     ctx.fillText(`${Math.round(object.properties.coords[0])}, ${Math.round(object.properties.coords[1])}`, object.properties.coords[0] + 5, object.properties.coords[1] + 10)
                 }
