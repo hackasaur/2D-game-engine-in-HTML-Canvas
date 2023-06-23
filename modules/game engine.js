@@ -165,8 +165,11 @@ export const controlsBuffer = () => {
     }
 }
 
-const updateCollidingObjectPairs = (collidingObjectPairs) => {
-
+const updateCollidingObjectPairs = (collidingObjectPairs, resolveCollision) => {
+    /*
+     collidingObjectPairs = [{pair:[object1, object2], object:collisionInfo.object, coords: collisionInfo.coords}, ...}
+     collisionLogic = {horizontal(object1, objeect2){...}, vertical(object1, object2){...}}
+    */
     for (let pair of collidingObjectPairs) {
         let object1 = pair.pair[0]
         let object2 = pair.pair[1]
@@ -175,7 +178,9 @@ const updateCollidingObjectPairs = (collidingObjectPairs) => {
         if (coordsWhenCollide[2]) { //colliding horizontally
             object1.properties.coords[0] = coordsWhenCollide[0][0]
             object2.properties.coords[0] = coordsWhenCollide[1][0]
-            object1.properties.velocity[0] = 0
+            // object1.properties.velocity[0] = 0
+            // object2.properties.velocity[0] = 0
+            resolveCollision.horizontal(object1, object2)
 
             if(pair.object == 1){
                 if(pair.coords[0] == 0){
@@ -202,7 +207,8 @@ const updateCollidingObjectPairs = (collidingObjectPairs) => {
         else { //colliding vertically
             object1.properties.coords[1] = coordsWhenCollide[0][1]
             object2.properties.coords[1] = coordsWhenCollide[1][1]
-            object1.properties.velocity[1] = 0
+            // object1.properties.velocity[1] = 0
+            resolveCollision.vertical(object1, object2)
 
             if(pair.object == 1){
                 if(pair.coords[1] == 0){
@@ -301,7 +307,7 @@ export const spawnMoveHereCursor = (ctx, coords, color) => {
     }
 }
 
-export const updateScene = (sceneObjects, sceneCursors, lightSource) => {
+export const updateScene = (sceneObjects, sceneCursors, lightSource, resolveCollision) => {
     lightSource.update()
 
     sceneObjects.forEach((obj) => {
@@ -309,7 +315,15 @@ export const updateScene = (sceneObjects, sceneCursors, lightSource) => {
         obj.properties.sidesColliding = []
     })
 
-    updateCollidingObjectPairs(collidingObjectPairs(sceneObjects))
+    if(!resolveCollision){
+        resolveCollision = {horizontal(object1, object2){ 
+                                                        object1.properties.velocity[0] = 0
+                                                        object2.properties.velocity[0] = 0}, 
+                            vertical(object1, object2){ 
+                                                        object1.properties.velocity[1] = 0
+                                                        object2.properties.velocity[1] = 0} }
+    }
+    updateCollidingObjectPairs(collidingObjectPairs(sceneObjects), resolveCollision)
 
     sceneObjects.forEach((obj) => {
         obj.properties.shadowOffset = shadowOffsetForObject(obj, lightSource)
@@ -339,7 +353,7 @@ export const paintScene = (sceneObjects, sceneCursors, lightSource, debug = fals
     }
 }
 
-export const startGameLoop = (canvas, allObjects, cursors, lightSource, debug = false, code = () => { return 0 }) => {
+export const startGameLoop = (canvas, allObjects, cursors, lightSource, resolveCollision, debug = false, code = () => { return 0 }) => {
     //allObjects is an array containing all the collidable objects of the scene. 
     //cursors is a array used to store all the current moveHereCursors
     let mouseCoords
@@ -382,7 +396,7 @@ export const startGameLoop = (canvas, allObjects, cursors, lightSource, debug = 
 
         if (running) {
             txtTools.paintBackground(ctx, '#353347')
-            updateScene(allObjects, cursors, lightSource)
+            updateScene(allObjects, cursors, lightSource, resolveCollision)
             paintScene(allObjects, cursors, lightSource, debug)
 
             //FPS

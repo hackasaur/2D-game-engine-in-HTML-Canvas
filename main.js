@@ -51,6 +51,15 @@ function main() {
 		light.properties.width = 20
 		light.properties.height = 20
 
+        let resolveCollision = {
+							horizontal(object1, object2){ 
+                                                        object1.properties.velocity[0] = -1 * object1.properties.velocity[0]
+                                                        object2.properties.velocity[0] = -1 * object2.properties.velocity[0]}, 
+                            vertical(object1, object2){ 
+                                                        object1.properties.velocity[1] = -1 * object1.properties.velocity[1]
+                                                        object2.properties.velocity[1] = -1 * object2.properties.velocity[1]}
+		}
+
 		const cursors = []
 
 		canvas.addEventListener('click', (event) => {
@@ -76,7 +85,7 @@ function main() {
 
 		let state = "idle"
 
-		gameEngine.startGameLoop(canvas, allObjects, cursors, light, false, () => {
+		gameEngine.startGameLoop(canvas, allObjects, cursors, light, resolveCollision , false, () => {
 			theHero.properties.velocity[1] += 0.04
 			// console.log(allObjects[0].properties)
 			let key = "blank"
@@ -105,7 +114,7 @@ function main() {
 				theHero.playAnimation("idle")
 				console.log("idle")
 			}
-			else if(state === "right" && theHero.properties.sidesColliding.includes("BOTTOM")){
+			else if(state === "right"){ // && theHero.properties.sidesColliding.includes("BOTTOM")){
 				theHero.stopAnimation()
 				theHero.playAnimation("walkRight")
 				theHero.properties.velocity[0] = 1

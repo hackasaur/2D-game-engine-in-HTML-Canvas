@@ -15,10 +15,11 @@
 
 # todo
 ## important and urgent
-- [ ] gravity
-- [ ] instead of moveTo coords, user should have control over object's velocity
+- [x] collision resolution logic should be modifiable 
+- [x] gravity
+- [x] instead of moveTo coords, user should have control over object's velocity
 - [ ] object rotation
-- [ ] animations
+- [x] animations
 - [x] collision event should be emitted. is object touching ground or not, should be knowable
 - [x] collision physics
     - [x] speed should stop after one collision 
@@ -37,7 +38,7 @@
 - [ ] multiple lightsources. find a better formula for shadow offset 
 - [ ] objects should have a property if they are collidable or not
 - [ ] seperate collision module
-- [ ] buffer for key presses
+- [x] buffer for key presses
 - [x] instead of getProperties() return properties so that it can be accessed as e.g. obj1.properties.coords
 - [x] point light source for rects using shadowOffset
 - [x] show object velocity vectors x and y in debugging
